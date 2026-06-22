@@ -10,14 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Player } from "@/models/Player";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlayersPage() {
+  const session = await getSession();
   await connectDB();
-  const players = await Player.find()
+
+  const filter = session?.role === "PARENT" ? { parent: session.userId } : {};
+  const players = await Player.find(filter)
     .populate("parent", "name phone email")
     .sort({ createdAt: -1 });
 
@@ -25,17 +29,23 @@ export default async function PlayersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Players</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {session?.role === "ADMIN" ? "Players" : "My Children"}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Manage academy players and their fee status
+            {session?.role === "ADMIN"
+              ? "Manage academy players and their fee status"
+              : "View your registered children"}
           </p>
         </div>
-        <Link href="/dashboard/players/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Player
-          </Button>
-        </Link>
+        {session?.role === "ADMIN" && (
+          <Link href="/dashboard/players/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Player
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="rounded-lg border">
@@ -99,13 +109,15 @@ export default async function PlayersPage() {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Link
-                        href={`/dashboard/players/${player._id.toString()}`}
-                      >
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
+                      {session?.role === "ADMIN" && (
+                        <Link
+                          href={`/dashboard/players/${player._id.toString()}`}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
