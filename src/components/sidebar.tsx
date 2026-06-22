@@ -6,6 +6,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  Pen,
   Receipt,
   UserCheck,
   Users,
@@ -28,6 +29,7 @@ export function Sidebar({ role }: SidebarProps) {
     { href: "/dashboard/players", label: "Players", icon: Users },
     { href: "/dashboard/fees", label: "Fees", icon: Receipt },
     { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+    { href: "/dashboard/payments/manual", label: "Record Payment", icon: Pen },
     { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
     { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
   ];

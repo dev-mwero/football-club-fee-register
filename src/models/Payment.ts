@@ -10,6 +10,7 @@ export interface IPayment extends Document {
   reference: string;
   status: PaymentStatus;
   paymentDate: Date;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ const PaymentSchema = new Schema<IPayment>(
       default: "PENDING",
     },
     paymentDate: { type: Date, default: Date.now },
+    notes: { type: String },
   },
   { timestamps: true },
 );

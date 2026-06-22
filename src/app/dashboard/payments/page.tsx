@@ -1,4 +1,7 @@
+import { Pen } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -21,11 +24,19 @@ export default async function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Payments</h1>
-        <p className="text-sm text-muted-foreground">
-          View all payment transactions
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Payments</h1>
+          <p className="text-sm text-muted-foreground">
+            View all payment transactions
+          </p>
+        </div>
+        <Link href="/dashboard/payments/manual">
+          <Button>
+            <Pen className="mr-2 h-4 w-4" />
+            Record Payment
+          </Button>
+        </Link>
       </div>
 
       <div className="rounded-lg border">
@@ -35,6 +46,7 @@ export default async function PaymentsPage() {
               <TableHead>Reference</TableHead>
               <TableHead>Player</TableHead>
               <TableHead>Parent</TableHead>
+              <TableHead>Method</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
@@ -44,7 +56,7 @@ export default async function PaymentsPage() {
             {payments.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center text-muted-foreground"
                 >
                   No payments yet
@@ -68,6 +80,9 @@ export default async function PaymentsPage() {
                     {player?.fullName ?? "—"}
                   </TableCell>
                   <TableCell>{parent?.name ?? "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{payment.paymentMethod}</Badge>
+                  </TableCell>
                   <TableCell>KES {payment.amount.toLocaleString()}</TableCell>
                   <TableCell>
                     {new Date(payment.paymentDate).toLocaleDateString()}
