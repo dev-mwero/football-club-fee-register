@@ -1,7 +1,5 @@
-import { Send } from "lucide-react";
-import Link from "next/link";
+import { SendRemindersButton } from "@/components/send-reminders-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -30,12 +28,7 @@ export default async function NotificationsPage() {
             View sent notifications and reminders
           </p>
         </div>
-        <Link href="/api/reminders/send">
-          <Button variant="outline">
-            <Send className="mr-2 h-4 w-4" />
-            Send Reminders
-          </Button>
-        </Link>
+        <SendRemindersButton />
       </div>
 
       <div className="rounded-lg border">
