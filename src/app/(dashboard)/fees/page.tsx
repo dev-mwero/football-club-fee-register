@@ -1,5 +1,6 @@
 import { Pencil, Plus } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,12 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { FeeStructure } from "@/models/FeeStructure";
 
 export const dynamic = "force-dynamic";
 
 export default async function FeesPage() {
+  const session = await getSession();
+  if (session?.role !== "ADMIN") redirect("/dashboard");
   await connectDB();
   const fees = await FeeStructure.find().sort({ createdAt: -1 });
 

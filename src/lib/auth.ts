@@ -60,6 +60,10 @@ export async function clearSession() {
   cookieStore.delete(COOKIE_NAME);
 }
 
+export function requireAdmin(role: string | undefined): boolean {
+  return role === "ADMIN";
+}
+
 export function getTokenFromRequest(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader?.startsWith("Bearer ")) {
