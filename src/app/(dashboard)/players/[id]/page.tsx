@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PayNowButton } from "@/components/pay-now-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { FeeRecord } from "@/models/FeeRecord";
 import { Payment } from "@/models/Payment";
@@ -25,6 +27,7 @@ export default async function PlayerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await getSession();
   await connectDB();
 
   const player = await Player.findById(id).populate(
@@ -39,10 +42,14 @@ export default async function PlayerDetailPage({
 
   const payments = await Payment.find({ player: id }).sort({ paymentDate: -1 });
   const parent = player.parent as unknown as {
+    _id: string;
     name: string;
     email: string;
     phone: string;
   } | null;
+
+  const isOwner = session?.userId === parent?._id;
+  const canPay = session?.role === "PARENT" && isOwner;
 
   return (
     <div className="space-y-6">
@@ -129,13 +136,14 @@ export default async function PlayerDetailPage({
                 <TableHead>Paid</TableHead>
                 <TableHead>Balance</TableHead>
                 <TableHead>Status</TableHead>
+                {canPay && <TableHead className="text-right">Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {feeRecords.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={canPay ? 6 : 5}
                     className="text-center text-muted-foreground"
                   >
                     No fee records
@@ -170,6 +178,22 @@ export default async function PlayerDetailPage({
                         {record.status}
                       </Badge>
                     </TableCell>
+                    {canPay && (
+                      <TableCell className="text-right">
+                        {record.status !== "PAID" && (
+                          <PayNowButton
+                            playerId={id}
+                            parentId={parent!._id}
+                            amount={record.balance}
+                            label={
+                              record.status === "UNPAID"
+                                ? "Pay Now"
+                                : "Pay Balance"
+                            }
+                          />
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}
