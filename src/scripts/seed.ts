@@ -1,9 +1,9 @@
-import { connectDB } from "../lib/db";
-import { User } from "../models/User";
-import { Player } from "../models/Player";
-import { FeeStructure } from "../models/FeeStructure";
-import { FeeRecord } from "../models/FeeRecord";
 import { hashPassword } from "../lib/auth";
+import { connectDB } from "../lib/db";
+import { FeeRecord } from "../models/FeeRecord";
+import { FeeStructure } from "../models/FeeStructure";
+import { Player } from "../models/Player";
+import { User } from "../models/User";
 
 async function seed() {
   console.log("Seeding database...\n");
@@ -28,10 +28,30 @@ async function seed() {
 
   // --- 2. Fee structures ---
   const feeDefs = [
-    { name: "Registration Fee", amount: 2000, frequency: "ONE_TIME" as const, description: "One-time registration for new players" },
-    { name: "Monthly Training Fee", amount: 5000, frequency: "MONTHLY" as const, description: "Standard monthly training fee" },
-    { name: "Tournament Fee", amount: 3000, frequency: "ONE_TIME" as const, description: "Per-tournament participation fee" },
-    { name: "Annual Subscription", amount: 30000, frequency: "YEARLY" as const, description: "Full year academy subscription" },
+    {
+      name: "Registration Fee",
+      amount: 2000,
+      frequency: "ONE_TIME" as const,
+      description: "One-time registration for new players",
+    },
+    {
+      name: "Monthly Training Fee",
+      amount: 5000,
+      frequency: "MONTHLY" as const,
+      description: "Standard monthly training fee",
+    },
+    {
+      name: "Tournament Fee",
+      amount: 3000,
+      frequency: "ONE_TIME" as const,
+      description: "Per-tournament participation fee",
+    },
+    {
+      name: "Annual Subscription",
+      amount: 30000,
+      frequency: "YEARLY" as const,
+      description: "Full year academy subscription",
+    },
   ];
 
   const fees: Record<string, string> = {};
@@ -53,8 +73,18 @@ async function seed() {
       email: "jane.mwangi@email.com",
       phone: "+254 722 100 001",
       children: [
-        { fullName: "Kevin Mwangi", dob: "2014-03-15", position: "Forward", category: "U-12" },
-        { fullName: "Sarah Mwangi", dob: "2016-07-22", position: "Midfielder", category: "U-10" },
+        {
+          fullName: "Kevin Mwangi",
+          dob: "2014-03-15",
+          position: "Forward",
+          category: "U-12",
+        },
+        {
+          fullName: "Sarah Mwangi",
+          dob: "2016-07-22",
+          position: "Midfielder",
+          category: "U-10",
+        },
       ],
     },
     {
@@ -62,7 +92,12 @@ async function seed() {
       email: "peter.otieno@email.com",
       phone: "+254 722 100 002",
       children: [
-        { fullName: "Brian Otieno", dob: "2012-11-02", position: "Defender", category: "U-14" },
+        {
+          fullName: "Brian Otieno",
+          dob: "2012-11-02",
+          position: "Defender",
+          category: "U-14",
+        },
       ],
     },
     {
@@ -70,9 +105,24 @@ async function seed() {
       email: "grace.kimani@email.com",
       phone: "+254 722 100 003",
       children: [
-        { fullName: "David Kimani", dob: "2010-05-10", position: "Goalkeeper", category: "U-16" },
-        { fullName: "Esther Kimani", dob: "2013-09-18", position: "Midfielder", category: "U-12" },
-        { fullName: "James Kimani", dob: "2015-01-30", position: "Forward", category: "U-10" },
+        {
+          fullName: "David Kimani",
+          dob: "2010-05-10",
+          position: "Goalkeeper",
+          category: "U-16",
+        },
+        {
+          fullName: "Esther Kimani",
+          dob: "2013-09-18",
+          position: "Midfielder",
+          category: "U-12",
+        },
+        {
+          fullName: "James Kimani",
+          dob: "2015-01-30",
+          position: "Forward",
+          category: "U-10",
+        },
       ],
     },
     {
@@ -80,8 +130,18 @@ async function seed() {
       email: "samuel.wanjala@email.com",
       phone: "+254 722 100 004",
       children: [
-        { fullName: "Michael Wanjala", dob: "2008-08-14", position: "Defender", category: "U-18" },
-        { fullName: "Diana Wanjala", dob: "2011-12-05", position: "Forward", category: "U-14" },
+        {
+          fullName: "Michael Wanjala",
+          dob: "2008-08-14",
+          position: "Defender",
+          category: "U-18",
+        },
+        {
+          fullName: "Diana Wanjala",
+          dob: "2011-12-05",
+          position: "Forward",
+          category: "U-14",
+        },
       ],
     },
   ];
@@ -133,8 +193,8 @@ async function seed() {
         await FeeRecord.create({
           player: player._id,
           feeStructure: registrationFee,
-          amountDue: reg!.amount,
-          amountPaid: reg!.amount,
+          amountDue: reg?.amount,
+          amountPaid: reg?.amount,
           balance: 0,
           status: "PAID",
         });
@@ -148,10 +208,8 @@ async function seed() {
       });
       if (!monthRecord) {
         const month = await FeeStructure.findById(monthlyFee);
-        const amount = month!.amount;
+        const amount = month?.amount;
 
-        // Rotate statuses to get a realistic mix
-        const idx = parentData.indexOf(parent) + parentData.indexOf(parent) + parentData.indexOf(parent);
         let status: "PAID" | "PARTIAL" | "UNPAID";
         let paid: number;
 
@@ -183,7 +241,9 @@ async function seed() {
           balance: amount - paid,
           status,
         });
-        console.log(`    ${status === "PAID" ? "✓" : status === "PARTIAL" ? "~" : "✗"} Monthly fee ${status}`);
+        console.log(
+          `    ${status === "PAID" ? "✓" : status === "PARTIAL" ? "~" : "✗"} Monthly fee ${status}`,
+        );
       }
     }
   }
