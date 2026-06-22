@@ -16,10 +16,27 @@ import { Notification } from "@/models/Notification";
 
 export const dynamic = "force-dynamic";
 
-export default async function OutstandingReportPage() {
+function buildLink(type: "ALL" | "FEE" | "EXPENSE") {
+  return type === "ALL" ? "/dashboard/reports/outstanding" : `/dashboard/reports/outstanding?type=${type}`;
+}
+
+export default async function OutstandingReportPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ type?: string }>;
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const selectedType: "ALL" | "FEE" | "EXPENSE" =
+    resolvedSearchParams?.type === "FEE"
+      ? "FEE"
+      : resolvedSearchParams?.type === "EXPENSE"
+        ? "EXPENSE"
+        : "ALL";
+
   await connectDB();
   const records = await FeeRecord.find({
     status: { $in: ["UNPAID", "PARTIAL"] },
+    ...(selectedType === "ALL" ? {} : { chargeType: selectedType }),
   })
     .populate("player", "fullName teamCategory")
     .populate("feeStructure", "name amount")
@@ -65,6 +82,23 @@ export default async function OutstandingReportPage() {
             {records.length} accounts)
           </p>
         </div>
+        <div className="ml-auto flex gap-2">
+          <Link href={buildLink("ALL")}>
+            <Button variant={selectedType === "ALL" ? "default" : "outline"} size="sm">
+              All
+            </Button>
+          </Link>
+          <Link href={buildLink("FEE")}>
+            <Button variant={selectedType === "FEE" ? "default" : "outline"} size="sm">
+              Fees
+            </Button>
+          </Link>
+          <Link href={buildLink("EXPENSE")}>
+            <Button variant={selectedType === "EXPENSE" ? "default" : "outline"} size="sm">
+              Expenses
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border">
@@ -73,6 +107,7 @@ export default async function OutstandingReportPage() {
             <TableRow>
               <TableHead>Player</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Fee</TableHead>
               <TableHead>Amount Due</TableHead>
               <TableHead>Balance</TableHead>
@@ -84,10 +119,10 @@ export default async function OutstandingReportPage() {
             {recordsWithReminder.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="text-center text-muted-foreground"
                 >
-                  No outstanding fees
+                  No {selectedType === "ALL" ? "outstanding records" : `${selectedType.toLowerCase()} records`} found
                 </TableCell>
               </TableRow>
             )}
@@ -100,6 +135,9 @@ export default async function OutstandingReportPage() {
                 name: string;
                 amount: number;
               } | null;
+              const chargeType =
+                (record as { chargeType?: "FEE" | "EXPENSE" }).chargeType ??
+                "FEE";
 
               return (
                 <TableRow key={record._id}>
@@ -107,6 +145,15 @@ export default async function OutstandingReportPage() {
                     {player?.fullName ?? "—"}
                   </TableCell>
                   <TableCell>{player?.teamCategory ?? "—"}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        chargeType === "EXPENSE" ? "secondary" : "default"
+                      }
+                    >
+                      {chargeType}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{fee?.name ?? "—"}</TableCell>
                   <TableCell>KES {record.amountDue.toLocaleString()}</TableCell>
                   <TableCell className="font-medium text-destructive">

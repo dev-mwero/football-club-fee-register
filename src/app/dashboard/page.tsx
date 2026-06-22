@@ -16,64 +16,61 @@ import { connectDB } from "@/lib/db";
 import { FeeRecord } from "@/models/FeeRecord";
 import { Payment } from "@/models/Payment";
 import { Player } from "@/models/Player";
+import { getDashboardStats } from "@/services/report-service";
 
 export const dynamic = "force-dynamic";
 
 async function AdminDashboard() {
-  await connectDB();
-
-  const totalPlayers = await Player.countDocuments({ status: "ACTIVE" });
-  const totalRevenue = await Payment.aggregate([
-    { $match: { status: "SUCCESS" } },
-    { $group: { _id: null, total: { $sum: "$amount" } } },
-  ]);
-  const outstandingFees = await FeeRecord.aggregate([
-    { $match: { status: { $in: ["UNPAID", "PARTIAL"] } } },
-    { $group: { _id: null, total: { $sum: "$balance" } } },
-  ]);
-  const unpaidAccounts = await FeeRecord.countDocuments({ status: "UNPAID" });
-  const monthlyCollections = await Payment.aggregate([
-    {
-      $match: {
-        status: "SUCCESS",
-        paymentDate: {
-          $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-        },
-      },
-    },
-    { $group: { _id: null, total: { $sum: "$amount" } } },
-  ]);
+  const statsData = await getDashboardStats();
 
   const stats = [
     {
       title: "Total Players",
-      value: totalPlayers,
+      value: statsData.totalPlayers,
       icon: Users,
       color: "text-primary",
     },
     {
       title: "Total Revenue",
-      value: `KES ${(totalRevenue[0]?.total ?? 0).toLocaleString()}`,
+      value: `KES ${statsData.totalRevenue.toLocaleString()}`,
       icon: TrendingUp,
       color: "text-emerald-600",
     },
     {
-      title: "Outstanding Fees",
-      value: `KES ${(outstandingFees[0]?.total ?? 0).toLocaleString()}`,
-      icon: AlertTriangle,
-      color: "text-amber-500",
+      title: "Fee Collections",
+      value: `KES ${statsData.feeCollections.toLocaleString()}`,
+      icon: TrendingUp,
+      color: "text-emerald-600",
+    },
+    {
+      title: "Expense Collections",
+      value: `KES ${statsData.expenseCollections.toLocaleString()}`,
+      icon: Wallet,
+      color: "text-sky-600",
     },
     {
       title: "Monthly Collections",
-      value: `KES ${(monthlyCollections[0]?.total ?? 0).toLocaleString()}`,
+      value: `KES ${statsData.monthlyCollections.toLocaleString()}`,
       icon: Wallet,
       color: "text-blue-600",
     },
     {
       title: "Unpaid Accounts",
-      value: unpaidAccounts,
+      value: statsData.unpaidAccounts,
       icon: UserX,
       color: "text-red-500",
+    },
+    {
+      title: "Fee Balances",
+      value: `KES ${statsData.outstandingFees.toLocaleString()}`,
+      icon: AlertTriangle,
+      color: "text-amber-500",
+    },
+    {
+      title: "Expense Balances",
+      value: `KES ${statsData.outstandingExpenses.toLocaleString()}`,
+      icon: Wallet,
+      color: "text-sky-600",
     },
   ];
 
@@ -86,7 +83,7 @@ async function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -105,7 +102,10 @@ async function AdminDashboard() {
   );
 }
 
-async function ParentDashboard(parentId: string) {
+async function ParentDashboard(
+  parentId: string,
+  recordTypeFilter: "ALL" | "FEE" | "EXPENSE",
+) {
   await connectDB();
 
   const children = await Player.find({ parent: parentId, status: "ACTIVE" });
@@ -115,17 +115,25 @@ async function ParentDashboard(parentId: string) {
       const records = await FeeRecord.find({ player: player._id })
         .populate("feeStructure", "name amount")
         .sort({ createdAt: -1 });
+      const visibleRecords =
+        recordTypeFilter === "ALL"
+          ? records
+          : records.filter(
+              (record) =>
+                ((record as unknown as { chargeType?: "FEE" | "EXPENSE" })
+                  .chargeType ?? "FEE") === recordTypeFilter,
+            );
 
-      const totalDue = records.reduce((s, r) => s + r.amountDue, 0);
-      const totalPaid = records.reduce((s, r) => s + r.amountPaid, 0);
-      const totalBalance = records.reduce((s, r) => s + r.balance, 0);
-      const hasUnpaid = records.some((r) => r.status !== "PAID");
+      const totalDue = visibleRecords.reduce((s, r) => s + r.amountDue, 0);
+      const totalPaid = visibleRecords.reduce((s, r) => s + r.amountPaid, 0);
+      const totalBalance = visibleRecords.reduce((s, r) => s + r.balance, 0);
+      const hasUnpaid = visibleRecords.some((r) => r.status !== "PAID");
 
       return {
         id: player._id.toString(),
         name: player.fullName,
         category: player.teamCategory,
-        records,
+        records: visibleRecords,
         totalDue,
         totalPaid,
         totalBalance,
@@ -219,6 +227,7 @@ async function ParentDashboard(parentId: string) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fee</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Amount Due</TableHead>
                   <TableHead>Paid</TableHead>
                   <TableHead>Balance</TableHead>
@@ -228,11 +237,8 @@ async function ParentDashboard(parentId: string) {
               <TableBody>
                 {child.records.length === 0 && (
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-muted-foreground"
-                    >
-                      No fee records
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      No {recordTypeFilter === "ALL" ? "fee records" : recordTypeFilter.toLowerCase()} found
                     </TableCell>
                   </TableRow>
                 )}
@@ -241,9 +247,21 @@ async function ParentDashboard(parentId: string) {
                     name: string;
                     amount: number;
                   } | null;
+                  const chargeType =
+                    (record as unknown as { chargeType?: "FEE" | "EXPENSE" })
+                      .chargeType ?? "FEE";
                   return (
                     <TableRow key={record._id.toString()}>
                       <TableCell>{fee?.name ?? "Unknown"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            chargeType === "EXPENSE" ? "secondary" : "default"
+                          }
+                        >
+                          {chargeType}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         KES {record.amountDue.toLocaleString()}
                       </TableCell>
@@ -278,13 +296,24 @@ async function ParentDashboard(parentId: string) {
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ type?: string }>;
+}) {
   const session = await getSession();
   const isAdmin = session?.role === "ADMIN";
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const recordTypeFilter: "ALL" | "FEE" | "EXPENSE" =
+    resolvedSearchParams?.type === "EXPENSE"
+      ? "EXPENSE"
+      : resolvedSearchParams?.type === "FEE"
+        ? "FEE"
+        : "ALL";
 
   if (isAdmin) {
     return <AdminDashboard />;
   }
 
-  return ParentDashboard(session?.userId ?? "");
+  return ParentDashboard(session?.userId ?? "", recordTypeFilter);
 }

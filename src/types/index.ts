@@ -1,4 +1,8 @@
-import type { FeeRecordStatus, IFeeRecord } from "@/models/FeeRecord";
+import type {
+  FeeRecordChargeType,
+  FeeRecordStatus,
+  IFeeRecord,
+} from "@/models/FeeRecord";
 import type { IFeeStructure } from "@/models/FeeStructure";
 import type { INotification, NotificationType } from "@/models/Notification";
 import type { IPayment, PaymentStatus } from "@/models/Payment";
@@ -14,6 +18,7 @@ export type {
   PaymentStatus,
   IFeeRecord,
   FeeRecordStatus,
+  FeeRecordChargeType,
   INotification,
   NotificationType,
 };

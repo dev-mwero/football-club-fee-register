@@ -40,6 +40,7 @@ interface FeeRecord {
   amountPaid: number;
   balance: number;
   status: string;
+  chargeType?: "FEE" | "EXPENSE";
 }
 
 export default function ManualPaymentPage() {
@@ -50,6 +51,7 @@ export default function ManualPaymentPage() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [recordTypeFilter, setRecordTypeFilter] = useState<"ALL" | "FEE" | "EXPENSE">("ALL");
 
   useEffect(() => {
     fetch("/api/admin/payments/manual/players")
@@ -63,6 +65,10 @@ export default function ManualPaymentPage() {
   const selectedPlayer = players.find((p) => p._id === selectedPlayerId);
 
   const feeRecords = selectedPlayer?.feeRecords ?? [];
+  const visibleFeeRecords =
+    recordTypeFilter === "ALL"
+      ? feeRecords
+      : feeRecords.filter((record) => (record.chargeType ?? "FEE") === recordTypeFilter);
   const totalOutstanding = feeRecords.reduce((sum, r) => sum + r.balance, 0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -192,23 +198,41 @@ export default function ManualPaymentPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>
-              Fee Records — {selectedPlayer?.fullName ?? "..."}
-            </CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle>
+                Fee Records — {selectedPlayer?.fullName ?? "..."}
+              </CardTitle>
+              <Select
+                value={recordTypeFilter}
+                onValueChange={(value) =>
+                  setRecordTypeFilter(value as "ALL" | "FEE" | "EXPENSE")
+                }
+              >
+                <SelectTrigger className="w-35">
+                  <SelectValue placeholder="Filter type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All</SelectItem>
+                  <SelectItem value="FEE">Fees</SelectItem>
+                  <SelectItem value="EXPENSE">Expenses</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             {!selectedPlayer ? (
               <p className="text-sm text-muted-foreground">
                 Select a player to see their fee records
               </p>
-            ) : feeRecords.length === 0 ? (
+            ) : visibleFeeRecords.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No fee records found for this player
+                No {recordTypeFilter === "ALL" ? "fee records" : recordTypeFilter.toLowerCase()} found for this player
               </p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Type</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead>Paid</TableHead>
                     <TableHead>Balance</TableHead>
@@ -216,8 +240,19 @@ export default function ManualPaymentPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {feeRecords.map((r) => (
+                  {visibleFeeRecords.map((r) => (
                     <TableRow key={r._id}>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            (r.chargeType ?? "FEE") === "EXPENSE"
+                              ? "secondary"
+                              : "default"
+                          }
+                        >
+                          {r.chargeType ?? "FEE"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>KES {r.amountDue.toLocaleString()}</TableCell>
                       <TableCell>KES {r.amountPaid.toLocaleString()}</TableCell>
                       <TableCell>KES {r.balance.toLocaleString()}</TableCell>

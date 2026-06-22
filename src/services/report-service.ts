@@ -4,6 +4,8 @@ import { Notification } from "@/models/Notification";
 import { Payment } from "@/models/Payment";
 import { Player } from "@/models/Player";
 
+type ChargeTypeFilter = "ALL" | "FEE" | "EXPENSE";
+
 export async function getPaymentReport() {
   await connectDB();
   return Payment.find()
@@ -12,10 +14,13 @@ export async function getPaymentReport() {
     .sort({ paymentDate: -1 });
 }
 
-export async function getOutstandingReport() {
+export async function getOutstandingReport(
+  chargeType: ChargeTypeFilter = "ALL",
+) {
   await connectDB();
   const records = await FeeRecord.find({
     status: { $in: ["UNPAID", "PARTIAL"] },
+    ...(chargeType === "ALL" ? {} : { chargeType }),
   })
     .populate("player", "fullName teamCategory")
     .populate("feeStructure", "name amount frequency")
@@ -55,8 +60,43 @@ export async function getDashboardStats() {
     { $group: { _id: null, total: { $sum: "$amount" } } },
   ]);
 
+  const feeCollections = await FeeRecord.aggregate([
+    {
+      $match: {
+        chargeType: "FEE",
+        amountPaid: { $gt: 0 },
+      },
+    },
+    { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+  ]);
+
+  const expenseCollections = await FeeRecord.aggregate([
+    {
+      $match: {
+        chargeType: "EXPENSE",
+        amountPaid: { $gt: 0 },
+      },
+    },
+    { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+  ]);
+
   const outstandingFees = await FeeRecord.aggregate([
-    { $match: { status: { $in: ["UNPAID", "PARTIAL"] } } },
+    {
+      $match: {
+        status: { $in: ["UNPAID", "PARTIAL"] },
+        chargeType: "FEE",
+      },
+    },
+    { $group: { _id: null, total: { $sum: "$balance" } } },
+  ]);
+
+  const outstandingExpenses = await FeeRecord.aggregate([
+    {
+      $match: {
+        status: { $in: ["UNPAID", "PARTIAL"] },
+        chargeType: "EXPENSE",
+      },
+    },
     { $group: { _id: null, total: { $sum: "$balance" } } },
   ]);
 
@@ -77,7 +117,10 @@ export async function getDashboardStats() {
   return {
     totalPlayers,
     totalRevenue: totalRevenue[0]?.total ?? 0,
+    feeCollections: feeCollections[0]?.total ?? 0,
+    expenseCollections: expenseCollections[0]?.total ?? 0,
     outstandingFees: outstandingFees[0]?.total ?? 0,
+    outstandingExpenses: outstandingExpenses[0]?.total ?? 0,
     monthlyCollections: monthlyCollections[0]?.total ?? 0,
     unpaidAccounts,
   };

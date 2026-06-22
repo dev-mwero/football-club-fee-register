@@ -23,10 +23,14 @@ export const dynamic = "force-dynamic";
 
 export default async function PlayerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ type?: string }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const recordTypeFilter = resolvedSearchParams?.type === "EXPENSE" ? "EXPENSE" : resolvedSearchParams?.type === "FEE" ? "FEE" : "ALL";
   const session = await getSession();
   await connectDB();
 
@@ -39,6 +43,14 @@ export default async function PlayerDetailPage({
   const feeRecords = await FeeRecord.find({ player: id })
     .populate("feeStructure", "name amount")
     .sort({ createdAt: -1 });
+  const visibleFeeRecords =
+    recordTypeFilter === "ALL"
+      ? feeRecords
+      : feeRecords.filter(
+          (record) =>
+            ((record as unknown as { chargeType?: "FEE" | "EXPENSE" })
+              .chargeType ?? "FEE") === recordTypeFilter,
+        );
 
   const payments = await Payment.find({ player: id }).sort({ paymentDate: -1 });
   const parent = player.parent as unknown as {
@@ -125,13 +137,42 @@ export default async function PlayerDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Fee Records</CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Fee Records</CardTitle>
+            <div className="flex gap-2 text-xs">
+              <Link href={`/dashboard/players/${id}${recordTypeFilter === "ALL" ? "" : "?type=ALL"}`}>
+                <Button
+                  variant={recordTypeFilter === "ALL" ? "default" : "outline"}
+                  size="sm"
+                >
+                  All
+                </Button>
+              </Link>
+              <Link href={`/dashboard/players/${id}?type=FEE`}>
+                <Button
+                  variant={recordTypeFilter === "FEE" ? "default" : "outline"}
+                  size="sm"
+                >
+                  Fees
+                </Button>
+              </Link>
+              <Link href={`/dashboard/players/${id}?type=EXPENSE`}>
+                <Button
+                  variant={recordTypeFilter === "EXPENSE" ? "default" : "outline"}
+                  size="sm"
+                >
+                  Expenses
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Fee</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Amount Due</TableHead>
                 <TableHead>Paid</TableHead>
                 <TableHead>Balance</TableHead>
@@ -140,24 +181,36 @@ export default async function PlayerDetailPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {feeRecords.length === 0 && (
+              {visibleFeeRecords.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={canPay ? 6 : 5}
+                    colSpan={canPay ? 7 : 6}
                     className="text-center text-muted-foreground"
                   >
-                    No fee records
+                    No {recordTypeFilter === "ALL" ? "fee records" : recordTypeFilter.toLowerCase()} found
                   </TableCell>
                 </TableRow>
               )}
-              {feeRecords.map((record) => {
+              {visibleFeeRecords.map((record) => {
                 const fee = record.feeStructure as unknown as {
                   name: string;
                   amount: number;
                 };
+                const chargeType =
+                  (record as unknown as { chargeType?: "FEE" | "EXPENSE" })
+                    .chargeType ?? "FEE";
                 return (
                   <TableRow key={record._id.toString()}>
                     <TableCell>{fee?.name ?? "Unknown"}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          chargeType === "EXPENSE" ? "secondary" : "default"
+                        }
+                      >
+                        {chargeType}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       KES {record.amountDue.toLocaleString()}
                     </TableCell>
