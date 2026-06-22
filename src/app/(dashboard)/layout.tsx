@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { getSession } from "@/lib/auth";
 
 export default async function DashboardLayout({
@@ -15,8 +16,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar role={session.role} />
       <main className="flex-1 overflow-auto bg-background p-6">{children}</main>
+      <Toaster />
     </div>
   );
 }

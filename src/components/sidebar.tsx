@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Receipt,
+  UserCheck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -14,17 +15,30 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/players", label: "Players", icon: Users },
-  { href: "/dashboard/fees", label: "Fees", icon: Receipt },
-  { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
-  { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
-  { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
-];
+interface SidebarProps {
+  role: string;
+}
 
-export function Sidebar() {
+export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
+  const isAdmin = role === "ADMIN";
+
+  const adminItems = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/players", label: "Players", icon: Users },
+    { href: "/dashboard/fees", label: "Fees", icon: Receipt },
+    { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+    { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
+    { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
+  ];
+
+  const parentItems = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/players", label: "My Children", icon: UserCheck },
+    { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+  ];
+
+  const navItems = isAdmin ? adminItems : parentItems;
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -62,7 +76,10 @@ export function Sidebar() {
 
       <Separator />
 
-      <div className="p-3">
+      <div className="space-y-1 p-3">
+        <div className="px-3 py-2 text-xs text-muted-foreground">
+          {isAdmin ? "Admin" : "Parent"}
+        </div>
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 text-muted-foreground"
