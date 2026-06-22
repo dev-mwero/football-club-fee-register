@@ -190,11 +190,12 @@ async function seed() {
       });
       if (!regRecord) {
         const reg = await FeeStructure.findById(registrationFee);
+        if (!reg) throw new Error("Registration fee structure not found");
         await FeeRecord.create({
           player: player._id,
           feeStructure: registrationFee,
-          amountDue: reg?.amount,
-          amountPaid: reg?.amount,
+          amountDue: reg.amount,
+          amountPaid: reg.amount,
           balance: 0,
           status: "PAID",
         });
@@ -208,7 +209,8 @@ async function seed() {
       });
       if (!monthRecord) {
         const month = await FeeStructure.findById(monthlyFee);
-        const amount = month?.amount;
+        if (!month) throw new Error("Monthly fee structure not found");
+        const amount = month.amount;
 
         let status: "PAID" | "PARTIAL" | "UNPAID";
         let paid: number;
