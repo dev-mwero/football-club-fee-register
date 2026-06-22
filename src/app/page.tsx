@@ -10,9 +10,6 @@ export default function HomePage() {
           <Link href="/login">
             <Button variant="outline">Sign In</Button>
           </Link>
-          <Link href="/register">
-            <Button>Get Started</Button>
-          </Link>
         </div>
       </header>
 
@@ -24,14 +21,9 @@ export default function HomePage() {
           Track player registrations, manage fee structures, process payments,
           and send automated reminders — all in one place.
         </p>
-        <div className="mt-8 flex gap-4">
-          <Link href="/register">
-            <Button size="lg">Get Started</Button>
-          </Link>
+        <div className="mt-8">
           <Link href="/login">
-            <Button variant="outline" size="lg">
-              Sign In
-            </Button>
+            <Button size="lg">Sign In</Button>
           </Link>
         </div>
       </main>
