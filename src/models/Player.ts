@@ -27,5 +27,9 @@ const PlayerSchema = new Schema<IPlayer>(
   { timestamps: true },
 );
 
+PlayerSchema.index({ parent: 1 });
+PlayerSchema.index({ status: 1 });
+PlayerSchema.index({ teamCategory: 1 });
+
 export const Player: Model<IPlayer> =
   mongoose.models.Player ?? mongoose.model<IPlayer>("Player", PlayerSchema);

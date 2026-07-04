@@ -60,6 +60,8 @@ FeeRecordSchema.index(
     partialFilterExpression: { periodKey: { $type: "string" } },
   },
 );
+FeeRecordSchema.index({ player: 1, status: 1 });
+FeeRecordSchema.index({ status: 1 });
 
 export const FeeRecord: Model<IFeeRecord> =
   mongoose.models.FeeRecord ??

@@ -23,7 +23,7 @@ const UserSchema = new Schema<IUser>(
       trim: true,
     },
     phone: { type: String, required: true, trim: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
     role: {
       type: String,
       enum: ["ADMIN", "PARENT", "COACH"],
@@ -32,6 +32,8 @@ const UserSchema = new Schema<IUser>(
   },
   { timestamps: true },
 );
+
+UserSchema.index({ role: 1 });
 
 export const User: Model<IUser> =
   mongoose.models.User ?? mongoose.model<IUser>("User", UserSchema);
