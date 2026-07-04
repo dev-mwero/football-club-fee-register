@@ -5,23 +5,22 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e] p-4">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-          <FileQuestion className="h-8 w-8 text-primary" />
+        <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
+          <FileQuestion className="h-10 w-10 text-primary" />
+          <div className="absolute inset-0 rounded-2xl bg-primary/5 blur-xl" />
         </div>
-        <h1 className="text-6xl font-bold tracking-tight text-foreground">
-          404
-        </h1>
-        <h2 className="mt-2 text-xl font-semibold text-foreground">
+        <h1 className="font-display text-8xl tracking-wide text-white">404</h1>
+        <h2 className="mt-2 font-display text-2xl tracking-wide text-white">
           Page not found
         </h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-slate-400">
           The page you are looking for does not exist or has been moved.
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          className="mt-8 inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-[#0a0f1e] shadow-lg shadow-primary/25 transition-all duration-200 hover:bg-primary/90 hover:shadow-primary/30"
         >
           Go home
         </Link>
