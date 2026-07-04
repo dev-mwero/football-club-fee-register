@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -16,18 +17,21 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body>
-        <div className="flex h-screen items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+          <div className="w-full max-w-md text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
               Application Error
             </h2>
-            <p className="text-gray-600 mb-4">
-              A critical error occurred. Please refresh the page.
+            <p className="mt-2 text-muted-foreground">
+              A critical error occurred. Please refresh the page or try again.
             </p>
             <button
               type="button"
               onClick={reset}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
             >
               Try again
             </button>

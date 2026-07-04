@@ -1,4 +1,11 @@
-import { AlertTriangle, TrendingUp, Users, UserX, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  TrendingUp,
+  Users,
+  UserX,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,83 +26,138 @@ import { getDashboardStats } from "@/services/report-service";
 
 export const dynamic = "force-dynamic";
 
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  color,
+  bgColor,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+}) {
+  return (
+    <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {title}
+            </p>
+            <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+              {value}
+            </p>
+          </div>
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-xl ${bgColor}`}
+          >
+            <Icon className={`h-5 w-5 ${color}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 async function AdminDashboard() {
   const statsData = await getDashboardStats();
 
-  const stats = [
+  const primaryStats = [
     {
       title: "Total Players",
       value: statsData.totalPlayers,
       icon: Users,
       color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "Total Revenue",
       value: `KES ${statsData.totalRevenue.toLocaleString()}`,
       icon: TrendingUp,
       color: "text-emerald-600",
+      bgColor: "bg-emerald-500/10",
     },
     {
       title: "Fee Collections",
       value: `KES ${statsData.feeCollections.toLocaleString()}`,
       icon: TrendingUp,
       color: "text-emerald-600",
+      bgColor: "bg-emerald-500/10",
     },
+  ];
+
+  const secondaryStats = [
     {
       title: "Expense Collections",
       value: `KES ${statsData.expenseCollections.toLocaleString()}`,
       icon: Wallet,
       color: "text-sky-600",
+      bgColor: "bg-sky-500/10",
     },
     {
       title: "Monthly Collections",
       value: `KES ${statsData.monthlyCollections.toLocaleString()}`,
       icon: Wallet,
       color: "text-blue-600",
+      bgColor: "bg-blue-500/10",
     },
     {
       title: "Unpaid Accounts",
       value: statsData.unpaidAccounts,
       icon: UserX,
       color: "text-red-500",
+      bgColor: "bg-red-500/10",
     },
     {
       title: "Fee Balances",
       value: `KES ${statsData.outstandingFees.toLocaleString()}`,
       icon: AlertTriangle,
       color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
     },
     {
       title: "Expense Balances",
       value: `KES ${statsData.outstandingExpenses.toLocaleString()}`,
       icon: Wallet,
       color: "text-sky-600",
+      bgColor: "bg-sky-500/10",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Admin Dashboard
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Academy financial overview
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{stat.value}</p>
-            </CardContent>
-          </Card>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {primaryStats.map((stat) => (
+          <StatCard key={stat.title} {...stat} />
         ))}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {secondaryStats.map((stat) => (
+          <StatCard key={stat.title} {...stat} />
+        ))}
+      </div>
+
+      <div className="flex items-center justify-end">
+        <Link
+          href="/dashboard/reports"
+          className="group flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          View detailed reports
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </div>
     </div>
   );
@@ -142,77 +204,101 @@ async function ParentDashboard(
   );
 
   const totalBalanceAll = childData.reduce((s, c) => s + c.totalBalance, 0);
+  const totalPaidAll = childData.reduce((s, c) => s + c.totalPaid, 0);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          My Dashboard
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Your children&apos;s fee status
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Children Registered
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{children.length}</p>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Children Registered
+                </p>
+                <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                  {children.length}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Paid
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-emerald-600">
-              KES{" "}
-              {childData.reduce((s, c) => s + c.totalPaid, 0).toLocaleString()}
-            </p>
+
+        <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Total Paid
+                </p>
+                <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-600">
+                  KES {totalPaidAll.toLocaleString()}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Outstanding Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-amber-500">
-              KES {totalBalanceAll.toLocaleString()}
-            </p>
+
+        <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Outstanding Balance
+                </p>
+                <p className="mt-2 text-2xl font-bold tracking-tight text-amber-500">
+                  KES {totalBalanceAll.toLocaleString()}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {childData.map((child) => (
-        <Card key={child.id}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
+        <Card
+          key={child.id}
+          className="overflow-hidden transition-all duration-200 hover:shadow-md"
+        >
+          <CardHeader className="bg-muted/30">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle>{child.name}</CardTitle>
+                <CardTitle className="text-lg">{child.name}</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {child.category}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm">
-                  Balance:{" "}
-                  <span
-                    className={
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Balance</p>
+                  <p
+                    className={`text-lg font-bold ${
                       child.totalBalance > 0
-                        ? "font-semibold text-destructive"
-                        : "font-semibold text-emerald-600"
-                    }
+                        ? "text-destructive"
+                        : "text-emerald-600"
+                    }`}
                   >
                     KES {child.totalBalance.toLocaleString()}
-                  </span>
-                </span>
+                  </p>
+                </div>
                 <Link href={`/dashboard/players/${child.id}`}>
                   <Button variant="outline" size="sm">
                     View Details
@@ -221,80 +307,90 @@ async function ParentDashboard(
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fee</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount Due</TableHead>
-                  <TableHead>Paid</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {child.records.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center text-muted-foreground"
-                    >
-                      No{" "}
-                      {recordTypeFilter === "ALL"
-                        ? "fee records"
-                        : recordTypeFilter.toLowerCase()}{" "}
-                      found
-                    </TableCell>
+          <CardContent className="p-0">
+            {child.records.length === 0 ? (
+              <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+                No{" "}
+                {recordTypeFilter === "ALL"
+                  ? "fee records"
+                  : recordTypeFilter.toLowerCase()}{" "}
+                found
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold">Fee</TableHead>
+                    <TableHead className="font-semibold">Type</TableHead>
+                    <TableHead className="font-semibold">Amount Due</TableHead>
+                    <TableHead className="font-semibold">Paid</TableHead>
+                    <TableHead className="font-semibold">Balance</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
                   </TableRow>
-                )}
-                {child.records.map((record) => {
-                  const fee = record.feeStructure as unknown as {
-                    name: string;
-                    amount: number;
-                  } | null;
-                  const chargeType =
-                    (record as unknown as { chargeType?: "FEE" | "EXPENSE" })
-                      .chargeType ?? "FEE";
-                  return (
-                    <TableRow key={record._id.toString()}>
-                      <TableCell>{fee?.name ?? "Unknown"}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            chargeType === "EXPENSE" ? "secondary" : "default"
-                          }
-                        >
-                          {chargeType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        KES {record.amountDue.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        KES {record.amountPaid.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        KES {record.balance.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            record.status === "PAID"
-                              ? "default"
-                              : record.status === "PARTIAL"
-                                ? "secondary"
-                                : "destructive"
-                          }
-                        >
-                          {record.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {child.records.map((record) => {
+                    const fee = record.feeStructure as unknown as {
+                      name: string;
+                      amount: number;
+                    } | null;
+                    const chargeType =
+                      (
+                        record as unknown as {
+                          chargeType?: "FEE" | "EXPENSE";
+                        }
+                      ).chargeType ?? "FEE";
+                    return (
+                      <TableRow
+                        key={record._id.toString()}
+                        className="transition-colors hover:bg-muted/50"
+                      >
+                        <TableCell className="font-medium">
+                          {fee?.name ?? "Unknown"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              chargeType === "EXPENSE" ? "secondary" : "default"
+                            }
+                            className="font-normal"
+                          >
+                            {chargeType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          KES {record.amountDue.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          KES {record.amountPaid.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          KES {record.balance.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              record.status === "PAID"
+                                ? "default"
+                                : record.status === "PARTIAL"
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                            className={
+                              record.status === "PAID"
+                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                : ""
+                            }
+                          >
+                            {record.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       ))}

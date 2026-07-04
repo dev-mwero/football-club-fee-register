@@ -1,7 +1,9 @@
-import { ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { EmptyState, PageHeader } from "@/components/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -69,22 +71,19 @@ export default async function OutstandingReportPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/reports">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Outstanding Fees Report
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Total outstanding: KES {totalOutstanding.toLocaleString()} (
-            {records.length} accounts)
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/reports">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <PageHeader
+            title="Outstanding Fees Report"
+            description={`Total outstanding: KES ${totalOutstanding.toLocaleString()} (${records.length} accounts)`}
+          />
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="flex gap-2">
           <Link href={buildLink("ALL")}>
             <Button
               variant={selectedType === "ALL" ? "default" : "outline"}
@@ -112,90 +111,111 @@ export default async function OutstandingReportPage({
         </div>
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Player</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Fee</TableHead>
-              <TableHead>Amount Due</TableHead>
-              <TableHead>Balance</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last Reminder</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recordsWithReminder.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="text-center text-muted-foreground"
-                >
-                  No{" "}
-                  {selectedType === "ALL"
-                    ? "outstanding records"
-                    : `${selectedType.toLowerCase()} records`}{" "}
-                  found
-                </TableCell>
-              </TableRow>
-            )}
-            {recordsWithReminder.map((record) => {
-              const player = record.player as unknown as {
-                fullName: string;
-                teamCategory: string;
-              } | null;
-              const fee = record.feeStructure as unknown as {
-                name: string;
-                amount: number;
-              } | null;
-              const chargeType =
-                (record as { chargeType?: "FEE" | "EXPENSE" }).chargeType ??
-                "FEE";
+      {/* Summary card */}
+      <Card className="transition-all duration-200 hover:shadow-md">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total Outstanding</p>
+              <p className="text-2xl font-bold text-amber-500">
+                KES {totalOutstanding.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              return (
-                <TableRow key={record._id?.toString() ?? Math.random()}>
-                  <TableCell className="font-medium">
-                    {player?.fullName ?? "—"}
-                  </TableCell>
-                  <TableCell>{player?.teamCategory ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        chargeType === "EXPENSE" ? "secondary" : "default"
-                      }
-                    >
-                      {chargeType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{fee?.name ?? "—"}</TableCell>
-                  <TableCell>KES {record.amountDue.toLocaleString()}</TableCell>
-                  <TableCell className="font-medium text-destructive">
-                    KES {record.balance.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        record.status === "PARTIAL"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {record.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {record.lastReminder
-                      ? new Date(record.lastReminder).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      {recordsWithReminder.length === 0 ? (
+        <EmptyState
+          icon={<AlertTriangle className="h-7 w-7" />}
+          title="No outstanding records"
+          description={
+            selectedType === "ALL"
+              ? "All accounts are fully paid."
+              : `No outstanding ${selectedType.toLowerCase()} records found.`
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-semibold">Player</TableHead>
+                <TableHead className="font-semibold">Category</TableHead>
+                <TableHead className="font-semibold">Type</TableHead>
+                <TableHead className="font-semibold">Fee</TableHead>
+                <TableHead className="font-semibold">Amount Due</TableHead>
+                <TableHead className="font-semibold">Balance</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Last Reminder</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recordsWithReminder.map((record) => {
+                const player = record.player as unknown as {
+                  fullName: string;
+                  teamCategory: string;
+                } | null;
+                const fee = record.feeStructure as unknown as {
+                  name: string;
+                  amount: number;
+                } | null;
+                const chargeType =
+                  (record as { chargeType?: "FEE" | "EXPENSE" }).chargeType ??
+                  "FEE";
+
+                return (
+                  <TableRow
+                    key={record._id?.toString() ?? Math.random()}
+                    className="transition-colors hover:bg-muted/50"
+                  >
+                    <TableCell className="font-medium">
+                      {player?.fullName ?? "\u2014"}
+                    </TableCell>
+                    <TableCell>{player?.teamCategory ?? "\u2014"}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          chargeType === "EXPENSE" ? "secondary" : "default"
+                        }
+                        className="font-normal"
+                      >
+                        {chargeType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{fee?.name ?? "\u2014"}</TableCell>
+                    <TableCell>
+                      KES {record.amountDue.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="font-medium text-destructive">
+                      KES {record.balance.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          record.status === "PARTIAL"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
+                        {record.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {record.lastReminder
+                        ? new Date(record.lastReminder).toLocaleDateString()
+                        : "\u2014"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { Pen } from "lucide-react";
+import { Pen, Wallet } from "lucide-react";
 import Link from "next/link";
+import { EmptyState, PageHeader } from "@/components/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,88 +25,98 @@ export default async function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Payments</h1>
-          <p className="text-sm text-muted-foreground">
-            View all payment transactions
-          </p>
-        </div>
-        <Link href="/dashboard/payments/manual">
-          <Button>
-            <Pen className="mr-2 h-4 w-4" />
-            Record Payment
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Payments"
+        description="View all payment transactions"
+        action={
+          <Link href="/dashboard/payments/manual">
+            <Button>
+              <Pen className="mr-2 h-4 w-4" />
+              Record Payment
+            </Button>
+          </Link>
+        }
+      />
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Reference</TableHead>
-              <TableHead>Player</TableHead>
-              <TableHead>Parent</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {payments.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center text-muted-foreground"
-                >
-                  No payments yet
-                </TableCell>
+      {payments.length === 0 ? (
+        <EmptyState
+          icon={<Wallet className="h-7 w-7" />}
+          title="No payments yet"
+          description="Payment transactions will appear here once recorded."
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-semibold">Reference</TableHead>
+                <TableHead className="font-semibold">Player</TableHead>
+                <TableHead className="font-semibold">Parent</TableHead>
+                <TableHead className="font-semibold">Method</TableHead>
+                <TableHead className="font-semibold">Amount</TableHead>
+                <TableHead className="font-semibold">Date</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
               </TableRow>
-            )}
-            {payments.map((payment) => {
-              const player = payment.player as unknown as {
-                fullName: string;
-              } | null;
-              const parent = payment.parent as unknown as {
-                name: string;
-              } | null;
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment) => {
+                const player = payment.player as unknown as {
+                  fullName: string;
+                } | null;
+                const parent = payment.parent as unknown as {
+                  name: string;
+                } | null;
 
-              return (
-                <TableRow key={payment._id.toString()}>
-                  <TableCell className="font-mono text-xs">
-                    {payment.reference}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {player?.fullName ?? "—"}
-                  </TableCell>
-                  <TableCell>{parent?.name ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{payment.paymentMethod}</Badge>
-                  </TableCell>
-                  <TableCell>KES {payment.amount.toLocaleString()}</TableCell>
-                  <TableCell>
-                    {new Date(payment.paymentDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        payment.status === "SUCCESS"
-                          ? "default"
-                          : payment.status === "PENDING"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                    >
-                      {payment.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                return (
+                  <TableRow
+                    key={payment._id.toString()}
+                    className="transition-colors hover:bg-muted/50"
+                  >
+                    <TableCell className="font-mono text-xs">
+                      {payment.reference}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {player?.fullName ?? "\u2014"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {parent?.name ?? "\u2014"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="font-normal">
+                        {payment.paymentMethod}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium text-foreground">
+                      KES {payment.amount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(payment.paymentDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          payment.status === "SUCCESS"
+                            ? "default"
+                            : payment.status === "PENDING"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                        className={
+                          payment.status === "SUCCESS"
+                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                            : ""
+                        }
+                      >
+                        {payment.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
