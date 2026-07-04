@@ -81,7 +81,7 @@ export default async function PlayerDetailPage({
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">
             {player.fullName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export default async function PlayerDetailPage({
           }
           className={
             player.status === "ACTIVE"
-              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+              ? "bg-primary/15 text-primary hover:bg-primary/15"
               : ""
           }
         >
@@ -116,7 +116,7 @@ export default async function PlayerDetailPage({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Due</p>
-                <p className="text-lg font-bold text-foreground">
+                <p className="font-display text-xl tracking-wide text-foreground">
                   KES {totalDue.toLocaleString()}
                 </p>
               </div>
@@ -126,12 +126,12 @@ export default async function PlayerDetailPage({
         <Card className="transition-all duration-200 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                <Trophy className="h-5 w-5 text-emerald-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <Trophy className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Paid</p>
-                <p className="text-lg font-bold text-emerald-600">
+                <p className="font-display text-xl tracking-wide text-emerald-500">
                   KES {totalPaid.toLocaleString()}
                 </p>
               </div>
@@ -141,12 +141,12 @@ export default async function PlayerDetailPage({
         <Card className="transition-all duration-200 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10">
-                <Trophy className="h-5 w-5 text-cyan-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+                <Trophy className="h-5 w-5 text-amber-500" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Balance</p>
-                <p className="text-lg font-bold text-cyan-600">
+                <p className="font-display text-xl tracking-wide text-amber-500">
                   KES {totalBalance.toLocaleString()}
                 </p>
               </div>
@@ -160,7 +160,9 @@ export default async function PlayerDetailPage({
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Player Information</CardTitle>
+              <CardTitle className="font-display text-lg tracking-wide">
+                Player Information
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -193,7 +195,9 @@ export default async function PlayerDetailPage({
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Parent / Guardian</CardTitle>
+              <CardTitle className="font-display text-lg tracking-wide">
+                Parent / Guardian
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -216,7 +220,9 @@ export default async function PlayerDetailPage({
       <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
         <CardHeader className="bg-muted/30">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-base">Fee Records</CardTitle>
+            <CardTitle className="font-display text-lg tracking-wide">
+              Fee Records
+            </CardTitle>
             <div className="flex gap-2 text-xs">
               <Link
                 href={`/dashboard/players/${id}${recordTypeFilter === "ALL" ? "" : "?type=ALL"}`}
@@ -322,7 +328,7 @@ export default async function PlayerDetailPage({
                           }
                           className={
                             record.status === "PAID"
-                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                              ? "bg-primary/15 text-primary hover:bg-primary/15"
                               : ""
                           }
                         >
@@ -356,7 +362,9 @@ export default async function PlayerDetailPage({
 
       <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
         <CardHeader className="bg-muted/30">
-          <CardTitle className="text-base">Payment History</CardTitle>
+          <CardTitle className="font-display text-lg tracking-wide">
+            Payment History
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {payments.length === 0 ? (
@@ -399,7 +407,7 @@ export default async function PlayerDetailPage({
                         }
                         className={
                           payment.status === "SUCCESS"
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                            ? "bg-primary/15 text-primary hover:bg-primary/15"
                             : ""
                         }
                       >

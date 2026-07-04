@@ -79,7 +79,9 @@ export default function NewFeePage() {
 
       <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
         <CardHeader className="bg-muted/30">
-          <CardTitle className="text-base">Fee Details</CardTitle>
+          <CardTitle className="font-display text-lg tracking-wide">
+            Fee Details
+          </CardTitle>
           <CardDescription>Define the fee structure</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">

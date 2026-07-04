@@ -43,12 +43,12 @@ export default async function PaymentReportPage() {
       <Card className="transition-all duration-200 hover:shadow-md">
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Collected</p>
-              <p className="text-2xl font-bold text-emerald-600">
+              <p className="font-display text-2xl tracking-wide text-emerald-500">
                 KES {totalAmount.toLocaleString()}
               </p>
             </div>

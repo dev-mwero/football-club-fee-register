@@ -90,7 +90,7 @@ export default async function FeesPage() {
                       variant={fee.active ? "default" : "secondary"}
                       className={
                         fee.active
-                          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                          ? "bg-primary/15 text-primary hover:bg-primary/15"
                           : ""
                       }
                     >

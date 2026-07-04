@@ -75,7 +75,7 @@ export default async function NotificationsPage() {
                         variant={notification.sent ? "default" : "secondary"}
                         className={
                           notification.sent
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                            ? "bg-primary/15 text-primary hover:bg-primary/15"
                             : ""
                         }
                       >

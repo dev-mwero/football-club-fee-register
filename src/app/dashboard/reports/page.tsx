@@ -26,7 +26,9 @@ export default function ReportsPage() {
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-base">Payment Report</CardTitle>
+                  <CardTitle className="font-display text-lg tracking-wide">
+                    Payment Report
+                  </CardTitle>
                   <CardDescription className="mt-0.5">
                     View all payment transactions
                   </CardDescription>
@@ -47,16 +49,18 @@ export default function ReportsPage() {
           <Card className="transition-all duration-200 hover:border-cyan-500/30 hover:shadow-md hover:shadow-cyan-500/5">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 transition-colors group-hover:bg-cyan-500 group-hover:text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 transition-colors group-hover:bg-amber-500 group-hover:text-white">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-base">Outstanding Fees</CardTitle>
+                  <CardTitle className="font-display text-lg tracking-wide">
+                    Outstanding Fees
+                  </CardTitle>
                   <CardDescription className="mt-0.5">
                     View unpaid and partially paid fees
                   </CardDescription>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-cyan-600" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-amber-500" />
               </div>
             </CardHeader>
             <CardContent>
