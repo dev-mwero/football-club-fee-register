@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,7 +57,7 @@ export default function ManualPaymentPage() {
   >("ALL");
 
   useEffect(() => {
-    fetch("/api/admin/payments/manual/players")
+    fetch("/api/v1/admin/payments/manual/players")
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setPlayers(data.data);
@@ -81,7 +82,7 @@ export default function ManualPaymentPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/payments/manual", {
+      const res = await fetch("/api/v1/admin/payments/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,26 +121,22 @@ export default function ManualPaymentPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/payments">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="h-9 w-9">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Record Manual Payment
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Record a cash, mobile transfer, or other off-platform payment
-          </p>
-        </div>
+        <PageHeader
+          title="Record Manual Payment"
+          description="Record a cash, mobile transfer, or other off-platform payment"
+        />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Details</CardTitle>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="transition-all duration-200 hover:shadow-md">
+          <CardHeader className="bg-muted/30">
+            <CardTitle className="text-base">Payment Details</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="player">Player</Label>
@@ -166,7 +163,9 @@ export default function ManualPaymentPage() {
               <div className="space-y-2">
                 <Label htmlFor="amount">
                   Amount (KES) — Outstanding:{" "}
-                  {totalOutstanding.toLocaleString()}
+                  <span className="font-medium text-amber-500">
+                    {totalOutstanding.toLocaleString()}
+                  </span>
                 </Label>
                 <Input
                   id="amount"
@@ -200,10 +199,10 @@ export default function ManualPaymentPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <CardTitle>
+        <Card className="transition-all duration-200 hover:shadow-md">
+          <CardHeader className="bg-muted/30">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="text-base">
                 Fee Records — {selectedPlayer?.fullName ?? "..."}
               </CardTitle>
               <Select
@@ -223,33 +222,36 @@ export default function ManualPaymentPage() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {!selectedPlayer ? (
-              <p className="text-sm text-muted-foreground">
+              <div className="px-6 py-8 text-center text-sm text-muted-foreground">
                 Select a player to see their fee records
-              </p>
+              </div>
             ) : visibleFeeRecords.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <div className="px-6 py-8 text-center text-sm text-muted-foreground">
                 No{" "}
                 {recordTypeFilter === "ALL"
                   ? "fee records"
                   : recordTypeFilter.toLowerCase()}{" "}
                 found for this player
-              </p>
+              </div>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Due</TableHead>
-                    <TableHead>Paid</TableHead>
-                    <TableHead>Balance</TableHead>
-                    <TableHead>Status</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold">Type</TableHead>
+                    <TableHead className="font-semibold">Due</TableHead>
+                    <TableHead className="font-semibold">Paid</TableHead>
+                    <TableHead className="font-semibold">Balance</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {visibleFeeRecords.map((r) => (
-                    <TableRow key={r._id}>
+                    <TableRow
+                      key={r._id}
+                      className="transition-colors hover:bg-muted/50"
+                    >
                       <TableCell>
                         <Badge
                           variant={
@@ -257,13 +259,16 @@ export default function ManualPaymentPage() {
                               ? "secondary"
                               : "default"
                           }
+                          className="font-normal"
                         >
                           {r.chargeType ?? "FEE"}
                         </Badge>
                       </TableCell>
                       <TableCell>KES {r.amountDue.toLocaleString()}</TableCell>
                       <TableCell>KES {r.amountPaid.toLocaleString()}</TableCell>
-                      <TableCell>KES {r.balance.toLocaleString()}</TableCell>
+                      <TableCell className="font-medium">
+                        KES {r.balance.toLocaleString()}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={
@@ -272,6 +277,11 @@ export default function ManualPaymentPage() {
                               : r.status === "PARTIAL"
                                 ? "secondary"
                                 : "outline"
+                          }
+                          className={
+                            r.status === "PAID"
+                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                              : ""
                           }
                         >
                           {r.status}

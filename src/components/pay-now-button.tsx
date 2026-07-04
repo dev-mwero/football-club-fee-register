@@ -25,7 +25,7 @@ export function PayNowButton({
     setError("");
 
     try {
-      const res = await fetch("/api/payments/initialize", {
+      const res = await fetch("/api/v1/payments/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playerId, parentId, amount }),

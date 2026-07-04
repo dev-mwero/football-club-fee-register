@@ -70,14 +70,14 @@ export default function AssignFeePage() {
   const activePlayers = players.filter((player) => player.status === "ACTIVE");
 
   useEffect(() => {
-    fetch("/api/players")
+    fetch("/api/v1/players")
       .then((r) => r.json())
       .then((res) => {
         if (res.success) setPlayers(res.data);
       })
       .catch(() => {});
 
-    fetch("/api/fees")
+    fetch("/api/v1/fees")
       .then((r) => r.json())
       .then((res) => {
         if (res.success) setFeeStructures(res.data);
@@ -107,7 +107,7 @@ export default function AssignFeePage() {
     };
 
     try {
-      const res = await fetch("/api/fee-records", {
+      const res = await fetch("/api/v1/fee-records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -205,7 +205,7 @@ export default function AssignFeePage() {
         payload.chargeType = "EXPENSE";
       }
 
-      const res = await fetch("/api/fee-records", {
+      const res = await fetch("/api/v1/fee-records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -239,32 +239,32 @@ export default function AssignFeePage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/fees">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="h-9 w-9">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Assign Fee to Player
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Link a fee structure to a player
           </p>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="max-w-lg">
-          <CardHeader>
-            <CardTitle>Manual Billing</CardTitle>
+        <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
+          <CardHeader className="bg-muted/30">
+            <CardTitle className="text-base">Manual Billing</CardTitle>
             <CardDescription>
               Assign a fee structure to one specific player
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                   {error}
                 </div>
               )}
@@ -318,15 +318,15 @@ export default function AssignFeePage() {
           </CardContent>
         </Card>
 
-        <Card className="max-w-lg">
-          <CardHeader>
-            <CardTitle>Bulk Billing Trigger</CardTitle>
+        <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
+          <CardHeader className="bg-muted/30">
+            <CardTitle className="text-base">Bulk Billing Trigger</CardTitle>
             <CardDescription>
               Manually trigger billing for all active players or a filtered
               group
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleAutoBilling} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="autoFeeStructure">Fee Structure</Label>
