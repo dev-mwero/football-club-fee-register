@@ -32,7 +32,8 @@ export async function getNotifications() {
   await connectDB();
   return Notification.find()
     .populate("recipient", "name email")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 }
 
 export async function processReminders() {
@@ -40,15 +41,28 @@ export async function processReminders() {
 
   const overdueRecords = await FeeRecord.find({
     status: { $in: ["UNPAID", "PARTIAL"] },
-  }).populate("feeStructure", "name amount");
+  })
+    .populate("feeStructure", "name amount")
+    .lean();
+
+  const playerIds = [
+    ...new Set(overdueRecords.map((r) => r.player.toString())),
+  ];
+
+  const players = await Player.find({ _id: { $in: playerIds } }).lean();
+  const playerMap = new Map(players.map((p) => [p._id.toString(), p]));
+
+  const parentIds = [...new Set(players.map((p) => p.parent.toString()))];
+  const parents = await User.find({ _id: { $in: parentIds } }).lean();
+  const parentMap = new Map(parents.map((p) => [p._id.toString(), p]));
 
   const results: { player: string; sent: boolean }[] = [];
 
   for (const record of overdueRecords) {
-    const player = await Player.findById(record.player);
+    const player = playerMap.get(record.player.toString());
     if (!player) continue;
 
-    const parent = await User.findById(player.parent);
+    const parent = parentMap.get(player.parent.toString());
     if (!parent) continue;
 
     const feeName =

@@ -34,6 +34,9 @@ const NotificationSchema = new Schema<INotification>(
   { timestamps: true },
 );
 
+NotificationSchema.index({ recipient: 1, sent: 1 });
+NotificationSchema.index({ type: 1, sent: 1 });
+
 export const Notification: Model<INotification> =
   mongoose.models.Notification ??
   mongoose.model<INotification>("Notification", NotificationSchema);

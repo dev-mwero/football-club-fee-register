@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PageHeader } from "@/components/page-layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,7 +42,7 @@ export default function NewFeePage() {
     };
 
     try {
-      const res = await fetch("/api/fees", {
+      const res = await fetch("/api/v1/fees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -66,29 +67,27 @@ export default function NewFeePage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/fees">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="h-9 w-9">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            New Fee Structure
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Create a new fee plan for the academy
-          </p>
-        </div>
+        <PageHeader
+          title="New Fee Structure"
+          description="Create a new fee plan for the academy"
+        />
       </div>
 
-      <Card className="max-w-lg">
-        <CardHeader>
-          <CardTitle>Fee Details</CardTitle>
+      <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="font-display text-lg tracking-wide">
+            Fee Details
+          </CardTitle>
           <CardDescription>Define the fee structure</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}

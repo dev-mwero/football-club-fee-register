@@ -2,10 +2,9 @@ import bcrypt from "bcryptjs";
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
+import { env } from "@/env";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "fallback-secret-change-in-production",
-);
+const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET);
 
 const COOKIE_NAME = "session";
 

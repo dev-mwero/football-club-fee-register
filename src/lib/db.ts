@@ -1,14 +1,7 @@
 import mongoose from "mongoose";
+import { env } from "@/env";
 
-function getMongoURI(): string {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error("Please define the MONGODB_URI environment variable");
-  }
-  return uri;
-}
-
-const MONGODB_URI = getMongoURI();
+const MONGODB_URI = env.MONGODB_URI;
 
 interface MongooseCache {
   conn: typeof mongoose | null;

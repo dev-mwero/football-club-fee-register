@@ -25,6 +25,8 @@ const FeeStructureSchema = new Schema<IFeeStructure>(
   { timestamps: true },
 );
 
+FeeStructureSchema.index({ active: 1 });
+
 export const FeeStructure: Model<IFeeStructure> =
   mongoose.models.FeeStructure ??
   mongoose.model<IFeeStructure>("FeeStructure", FeeStructureSchema);

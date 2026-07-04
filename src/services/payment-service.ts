@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
 import { initializeTransaction, verifyTransaction } from "@/lib/paystack";
@@ -10,31 +11,44 @@ async function allocateToFeeRecords(
   playerId: string,
   amount: number,
 ): Promise<void> {
-  const feeRecords = await FeeRecord.find({
-    player: playerId,
-    status: { $in: ["UNPAID", "PARTIAL"] },
-  }).sort({ createdAt: 1 });
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  let remaining = amount;
+  try {
+    const feeRecords = await FeeRecord.find({
+      player: playerId,
+      status: { $in: ["UNPAID", "PARTIAL"] },
+    })
+      .sort({ createdAt: 1 })
+      .session(session);
 
-  for (const record of feeRecords) {
-    if (remaining <= 0) break;
+    let remaining = amount;
 
-    const owed = record.balance;
-    const toPay = Math.min(remaining, owed);
+    for (const record of feeRecords) {
+      if (remaining <= 0) break;
 
-    record.amountPaid += toPay;
-    record.balance = record.amountDue - record.amountPaid;
+      const toPay = Math.min(remaining, record.balance);
 
-    if (record.balance <= 0) {
-      record.status = "PAID";
-      record.balance = 0;
-    } else {
-      record.status = "PARTIAL";
+      record.amountPaid += toPay;
+      record.balance = Math.max(0, record.amountDue - record.amountPaid);
+
+      if (record.balance <= 0) {
+        record.status = "PAID";
+        record.balance = 0;
+      } else {
+        record.status = "PARTIAL";
+      }
+
+      remaining -= toPay;
+      await record.save({ session });
     }
 
-    remaining -= toPay;
-    await record.save();
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
 }
 
@@ -164,5 +178,6 @@ export async function getPayments() {
   return Payment.find()
     .populate("player", "fullName teamCategory")
     .populate("parent", "name email")
-    .sort({ paymentDate: -1 });
+    .sort({ paymentDate: -1 })
+    .lean();
 }

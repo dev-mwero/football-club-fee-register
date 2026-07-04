@@ -33,5 +33,10 @@ const PaymentSchema = new Schema<IPayment>(
   { timestamps: true },
 );
 
+PaymentSchema.index({ player: 1 });
+PaymentSchema.index({ parent: 1 });
+PaymentSchema.index({ status: 1 });
+PaymentSchema.index({ paymentDate: -1 });
+
 export const Payment: Model<IPayment> =
   mongoose.models.Payment ?? mongoose.model<IPayment>("Payment", PaymentSchema);

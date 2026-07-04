@@ -1,13 +1,13 @@
 import nodemailer from "nodemailer";
+import { env } from "@/env";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
+  host: env.SMTP_HOST,
+  port: env.SMTP_PORT,
+  secure: env.SMTP_PORT === 465,
+  auth: env.SMTP_USER
+    ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
+    : undefined,
 });
 
 export async function sendEmail(params: {
@@ -15,14 +15,14 @@ export async function sendEmail(params: {
   subject: string;
   html: string;
 }) {
-  if (!process.env.SMTP_HOST) {
+  if (!env.SMTP_HOST) {
     console.log("Email not configured. Skipping send.");
     console.log(`To: ${params.to}, Subject: ${params.subject}`);
     return;
   }
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM ?? "noreply@academy.com",
+    from: env.EMAIL_FROM ?? "noreply@academy.com",
     to: params.to,
     subject: params.subject,
     html: params.html,

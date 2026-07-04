@@ -11,7 +11,7 @@ export function SendRemindersButton() {
   async function handleClick() {
     setLoading(true);
     try {
-      const res = await fetch("/api/reminders/send", { method: "POST" });
+      const res = await fetch("/api/v1/reminders/send", { method: "POST" });
       const json = await res.json();
       if (res.ok) {
         toast.success(`Reminders sent to ${json.data.sent} account(s)`);
