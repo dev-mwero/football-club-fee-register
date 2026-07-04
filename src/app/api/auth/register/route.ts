@@ -1,18 +1,39 @@
 import { NextResponse } from "next/server";
 import { createToken, hashPassword, setSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { registerSchema } from "@/lib/validations";
 import { User } from "@/models/User";
 
 export async function POST(request: Request) {
   try {
-    const { name, email, phone, password, role } = await request.json();
-
-    if (!name || !email || !phone || !password) {
+    const ip = getClientIp(request);
+    const limit = rateLimit(`register:${ip}`, { windowMs: 3_600_000, max: 5 });
+    if (!limit.allowed) {
       return NextResponse.json(
-        { success: false, error: "All fields are required" },
+        {
+          success: false,
+          error: "Too many registration attempts. Please try again later.",
+        },
+        { status: 429 },
+      );
+    }
+
+    const body = await request.json();
+    const parsed = registerSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
+
+    const { name, email, phone, password, role } = parsed.data;
 
     await connectDB();
 

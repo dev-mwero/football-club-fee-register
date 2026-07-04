@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { manualPaymentSchema } from "@/lib/validations";
 import { Player } from "@/models/Player";
 import { createManualPayment } from "@/services/payment-service";
 
 export async function POST(request: Request) {
   try {
-    const { playerId, amount, notes } = await request.json();
+    const body = await request.json();
+    const parsed = manualPaymentSchema.safeParse(body);
 
-    if (!playerId || !amount || amount <= 0) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "playerId and a valid amount are required" },
+        {
+          success: false,
+          error: "Validation failed",
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
+
+    const { playerId, amount, notes } = parsed.data;
 
     await connectDB();
 

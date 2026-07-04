@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mongoIdParamSchema, updateFeeSchema } from "@/lib/validations";
 import {
   deleteFeeStructure,
   getFeeStructureById,
@@ -11,6 +12,15 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+    const parsed = mongoIdParamSchema.safeParse({ id });
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid fee structure ID" },
+        { status: 400 },
+      );
+    }
+
     const fee = await getFeeStructureById(id);
     if (!fee) {
       return NextResponse.json(
@@ -34,8 +44,30 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params;
+    const idParsed = mongoIdParamSchema.safeParse({ id });
+
+    if (!idParsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid fee structure ID" },
+        { status: 400 },
+      );
+    }
+
     const body = await req.json();
-    const fee = await updateFeeStructure(id, body);
+    const bodyParsed = updateFeeSchema.safeParse(body);
+
+    if (!bodyParsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: bodyParsed.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const fee = await updateFeeStructure(id, bodyParsed.data);
     if (!fee) {
       return NextResponse.json(
         { success: false, error: "Fee structure not found" },
@@ -58,6 +90,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
+    const parsed = mongoIdParamSchema.safeParse({ id });
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid fee structure ID" },
+        { status: 400 },
+      );
+    }
+
     const fee = await deleteFeeStructure(id);
     if (!fee) {
       return NextResponse.json(

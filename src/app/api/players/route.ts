@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createPlayerSchema } from "@/lib/validations";
 import { createPlayer, getPlayers } from "@/services/player-service";
 
 export async function GET() {
@@ -17,7 +18,20 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const player = await createPlayer(body);
+    const parsed = createPlayerSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const player = await createPlayer(parsed.data);
     return NextResponse.json({ success: true, data: player }, { status: 201 });
   } catch (error) {
     console.error("Create player error:", error);

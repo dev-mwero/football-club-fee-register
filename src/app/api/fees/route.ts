@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createFeeSchema } from "@/lib/validations";
 import { createFeeStructure, getFeeStructures } from "@/services/fee-service";
 
 export async function GET() {
@@ -17,7 +18,20 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const fee = await createFeeStructure(body);
+    const parsed = createFeeSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const fee = await createFeeStructure(parsed.data);
     return NextResponse.json({ success: true, data: fee }, { status: 201 });
   } catch (error) {
     console.error("Create fee error:", error);

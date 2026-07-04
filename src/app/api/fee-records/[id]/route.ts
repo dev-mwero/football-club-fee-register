@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mongoIdParamSchema, updateFeeRecordSchema } from "@/lib/validations";
 import { updateFeeRecord } from "@/services/fee-service";
 
 export async function PUT(
@@ -7,8 +8,30 @@ export async function PUT(
 ) {
   try {
     const { id } = await context.params;
+    const idParsed = mongoIdParamSchema.safeParse({ id });
+
+    if (!idParsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid fee record ID" },
+        { status: 400 },
+      );
+    }
+
     const body = await req.json();
-    const record = await updateFeeRecord(id, body);
+    const bodyParsed = updateFeeRecordSchema.safeParse(body);
+
+    if (!bodyParsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: bodyParsed.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const record = await updateFeeRecord(id, bodyParsed.data);
     if (!record) {
       return NextResponse.json(
         { success: false, error: "Fee record not found" },

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assignFeeSchema, autoBillSchema } from "@/lib/validations";
 import {
   assignFeeToPlayer,
   autoBillActivePlayers,
@@ -23,44 +24,53 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     if (body.billingType === "AUTO") {
-      if (!body.feeStructure || !body.amountDue || !body.periodKey) {
+      const parsed = autoBillSchema.safeParse(body);
+
+      if (!parsed.success) {
         return NextResponse.json(
           {
             success: false,
-            error:
-              "feeStructure, amountDue, and periodKey are required for automatic billing",
+            error: "Validation failed",
+            details: parsed.error.flatten().fieldErrors,
           },
           { status: 400 },
         );
       }
 
       const result = await autoBillActivePlayers({
-        feeStructure: body.feeStructure,
-        amountDue: Number(body.amountDue),
-        periodKey: String(body.periodKey),
-        teamCategory: body.teamCategory ? String(body.teamCategory) : undefined,
-        playerIds: Array.isArray(body.playerIds)
-          ? body.playerIds.map((id: unknown) => String(id))
-          : undefined,
-        billingLabel: body.billingLabel ? String(body.billingLabel) : undefined,
-        billingReason: body.billingReason ? String(body.billingReason) : undefined,
-        chargeType: body.chargeType === "EXPENSE" ? "EXPENSE" : "FEE",
+        feeStructure: parsed.data.feeStructure,
+        amountDue: parsed.data.amountDue,
+        periodKey: parsed.data.periodKey,
+        teamCategory: parsed.data.teamCategory,
+        playerIds: parsed.data.playerIds,
+        billingLabel: parsed.data.billingLabel,
+        billingReason: parsed.data.billingReason,
+        chargeType: parsed.data.chargeType,
       });
 
-      return NextResponse.json({ success: true, data: result }, { status: 201 });
+      return NextResponse.json(
+        { success: true, data: result },
+        { status: 201 },
+      );
     }
 
-    if (!body.player || !body.feeStructure || !body.amountDue) {
+    const parsed = assignFeeSchema.safeParse(body);
+
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "player, feeStructure, and amountDue are required" },
+        {
+          success: false,
+          error: "Validation failed",
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
     const record = await assignFeeToPlayer({
-      player: body.player,
-      feeStructure: body.feeStructure,
-      amountDue: Number(body.amountDue),
+      player: parsed.data.player,
+      feeStructure: parsed.data.feeStructure,
+      amountDue: parsed.data.amountDue,
     });
 
     return NextResponse.json({ success: true, data: record }, { status: 201 });
