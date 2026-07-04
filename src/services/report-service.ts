@@ -11,7 +11,8 @@ export async function getPaymentReport() {
   return Payment.find()
     .populate("player", "fullName teamCategory")
     .populate("parent", "name email")
-    .sort({ paymentDate: -1 });
+    .sort({ paymentDate: -1 })
+    .lean();
 }
 
 export async function getOutstandingReport(
@@ -24,30 +25,41 @@ export async function getOutstandingReport(
   })
     .populate("player", "fullName teamCategory")
     .populate("feeStructure", "name amount frequency")
-    .sort({ balance: -1 });
+    .sort({ balance: -1 })
+    .lean();
 
-  const enriched = [];
+  const playerIds = [
+    ...new Set(
+      records
+        .map((r) => (r.player as unknown as { _id: string })?._id)
+        .filter(Boolean)
+        .map(String),
+    ),
+  ];
 
-  for (const record of records) {
-    const player = record.player as unknown as {
-      _id: string;
-      fullName: string;
-      teamCategory: string;
+  const lastNotifications = await Notification.aggregate([
+    {
+      $match: {
+        recipient: { $in: playerIds },
+        type: "PAYMENT_REMINDER",
+        sent: true,
+      },
+    },
+    { $sort: { sentAt: -1 } },
+    { $group: { _id: "$recipient", lastSentAt: { $first: "$sentAt" } } },
+  ]);
+
+  const notificationMap = new Map(
+    lastNotifications.map((n) => [n._id.toString(), n.lastSentAt]),
+  );
+
+  return records.map((record) => {
+    const player = record.player as unknown as { _id: string };
+    return {
+      ...record,
+      lastReminder: notificationMap.get(player?._id?.toString()) ?? null,
     };
-
-    const lastNotification = await Notification.findOne({
-      recipient: player?._id,
-      type: "PAYMENT_REMINDER",
-      sent: true,
-    }).sort({ sentAt: -1 });
-
-    enriched.push({
-      ...record.toObject(),
-      lastReminder: lastNotification?.sentAt ?? null,
-    });
-  }
-
-  return enriched;
+  });
 }
 
 export async function getDashboardStats() {
