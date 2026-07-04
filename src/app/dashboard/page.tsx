@@ -40,19 +40,22 @@ function StatCard({
   bgColor: string;
 }) {
   return (
-    <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
-      <CardContent className="p-4 sm:p-5">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
+      {/* Accent bar */}
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-emerald-400 to-primary opacity-60 transition-opacity group-hover:opacity-100" />
+
+      <CardContent className="p-5 sm:p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {title}
             </p>
-            <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+            <p className="mt-2 font-display text-3xl tracking-wide text-foreground sm:text-4xl">
               {value}
             </p>
           </div>
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-xl ${bgColor}`}
+            className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${bgColor}`}
           >
             <Icon className={`h-5 w-5 ${color}`} />
           </div>
@@ -77,14 +80,14 @@ async function AdminDashboard() {
       title: "Total Revenue",
       value: `KES ${statsData.totalRevenue.toLocaleString()}`,
       icon: TrendingUp,
-      color: "text-emerald-600",
+      color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
     {
       title: "Fee Collections",
       value: `KES ${statsData.feeCollections.toLocaleString()}`,
       icon: TrendingUp,
-      color: "text-emerald-600",
+      color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
   ];
@@ -94,14 +97,14 @@ async function AdminDashboard() {
       title: "Expense Collections",
       value: `KES ${statsData.expenseCollections.toLocaleString()}`,
       icon: Wallet,
-      color: "text-sky-600",
-      bgColor: "bg-sky-500/10",
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-500/10",
     },
     {
       title: "Monthly Collections",
       value: `KES ${statsData.monthlyCollections.toLocaleString()}`,
       icon: Wallet,
-      color: "text-blue-600",
+      color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
     {
@@ -115,22 +118,22 @@ async function AdminDashboard() {
       title: "Fee Balances",
       value: `KES ${statsData.outstandingFees.toLocaleString()}`,
       icon: AlertTriangle,
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-500/10",
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
     },
     {
       title: "Expense Balances",
       value: `KES ${statsData.outstandingExpenses.toLocaleString()}`,
       icon: Wallet,
-      color: "text-sky-600",
-      bgColor: "bg-sky-500/10",
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-500/10",
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">
           Admin Dashboard
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -207,9 +210,9 @@ async function ParentDashboard(
   const totalPaidAll = childData.reduce((s, c) => s + c.totalPaid, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">
           My Dashboard
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -218,55 +221,58 @@ async function ParentDashboard(
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
-          <CardContent className="p-4 sm:p-5">
+        <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-emerald-400 to-primary opacity-60 transition-opacity group-hover:opacity-100" />
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Children Registered
                 </p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                <p className="mt-2 font-display text-3xl tracking-wide text-foreground sm:text-4xl">
                   {children.length}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
                 <Users className="h-5 w-5 text-primary" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
-          <CardContent className="p-4 sm:p-5">
+        <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-0.5">
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 to-emerald-400 opacity-60 transition-opacity group-hover:opacity-100" />
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Total Paid
                 </p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-600">
+                <p className="mt-2 font-display text-3xl tracking-wide text-emerald-500 sm:text-4xl">
                   KES {totalPaidAll.toLocaleString()}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                <TrendingUp className="h-5 w-5 text-emerald-600" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-md">
-          <CardContent className="p-4 sm:p-5">
+        <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-0.5">
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-amber-500 to-amber-400 opacity-60 transition-opacity group-hover:opacity-100" />
+          <CardContent className="p-5 sm:p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Outstanding Balance
                 </p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-cyan-600">
+                <p className="mt-2 font-display text-3xl tracking-wide text-amber-500 sm:text-4xl">
                   KES {totalBalanceAll.toLocaleString()}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10">
-                <AlertTriangle className="h-5 w-5 text-cyan-500" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
@@ -276,12 +282,15 @@ async function ParentDashboard(
       {childData.map((child) => (
         <Card
           key={child.id}
-          className="overflow-hidden transition-all duration-200 hover:shadow-md"
+          className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
         >
+          <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary/40 via-emerald-400/40 to-primary/40 opacity-60 transition-opacity group-hover:opacity-100" />
           <CardHeader className="bg-muted/30">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle className="text-lg">{child.name}</CardTitle>
+                <CardTitle className="font-display text-xl tracking-wide">
+                  {child.name}
+                </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {child.category}
                 </p>
@@ -290,10 +299,10 @@ async function ParentDashboard(
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Balance</p>
                   <p
-                    className={`text-lg font-bold ${
+                    className={`font-display text-xl tracking-wide ${
                       child.totalBalance > 0
                         ? "text-destructive"
-                        : "text-emerald-600"
+                        : "text-emerald-500"
                     }`}
                   >
                     KES {child.totalBalance.toLocaleString()}
@@ -378,7 +387,7 @@ async function ParentDashboard(
                             }
                             className={
                               record.status === "PAID"
-                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/15"
                                 : ""
                             }
                           >
