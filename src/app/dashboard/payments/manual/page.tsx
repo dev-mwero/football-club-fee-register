@@ -134,7 +134,9 @@ export default function ManualPaymentPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="transition-all duration-200 hover:shadow-md">
           <CardHeader className="bg-muted/30">
-            <CardTitle className="text-base">Payment Details</CardTitle>
+            <CardTitle className="font-display text-lg tracking-wide">
+              Payment Details
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,7 +165,7 @@ export default function ManualPaymentPage() {
               <div className="space-y-2">
                 <Label htmlFor="amount">
                   Amount (KES) — Outstanding:{" "}
-                  <span className="font-medium text-cyan-600">
+                  <span className="font-medium text-amber-500">
                     {totalOutstanding.toLocaleString()}
                   </span>
                 </Label>
@@ -202,7 +204,7 @@ export default function ManualPaymentPage() {
         <Card className="transition-all duration-200 hover:shadow-md">
           <CardHeader className="bg-muted/30">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-base">
+              <CardTitle className="font-display text-lg tracking-wide">
                 Fee Records — {selectedPlayer?.fullName ?? "..."}
               </CardTitle>
               <Select
@@ -280,7 +282,7 @@ export default function ManualPaymentPage() {
                           }
                           className={
                             r.status === "PAID"
-                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                              ? "bg-primary/15 text-primary hover:bg-primary/15"
                               : ""
                           }
                         >

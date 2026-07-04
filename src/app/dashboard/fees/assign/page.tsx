@@ -244,7 +244,7 @@ export default function AssignFeePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="font-display text-4xl tracking-wide text-foreground sm:text-5xl">
             Assign Fee to Player
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -256,7 +256,9 @@ export default function AssignFeePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
           <CardHeader className="bg-muted/30">
-            <CardTitle className="text-base">Manual Billing</CardTitle>
+            <CardTitle className="font-display text-lg tracking-wide">
+              Manual Billing
+            </CardTitle>
             <CardDescription>
               Assign a fee structure to one specific player
             </CardDescription>
@@ -320,7 +322,9 @@ export default function AssignFeePage() {
 
         <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
           <CardHeader className="bg-muted/30">
-            <CardTitle className="text-base">Bulk Billing Trigger</CardTitle>
+            <CardTitle className="font-display text-lg tracking-wide">
+              Bulk Billing Trigger
+            </CardTitle>
             <CardDescription>
               Manually trigger billing for all active players or a filtered
               group

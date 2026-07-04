@@ -80,7 +80,9 @@ export default function NewPlayerPage() {
 
       <Card className="max-w-lg transition-all duration-200 hover:shadow-md">
         <CardHeader className="bg-muted/30">
-          <CardTitle className="text-base">Player Details</CardTitle>
+          <CardTitle className="font-display text-lg tracking-wide">
+            Player Details
+          </CardTitle>
           <CardDescription>Enter the player&apos;s information</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">

@@ -108,7 +108,7 @@ export default async function PlayersPage() {
                         }
                         className={
                           player.status === "ACTIVE"
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                            ? "bg-primary/15 text-primary hover:bg-primary/15"
                             : ""
                         }
                       >
