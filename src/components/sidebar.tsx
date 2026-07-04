@@ -56,18 +56,21 @@ function NavLink({
       href={item.href}
       onClick={onClick}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+        "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
         isActive
-          ? "bg-primary text-primary-foreground shadow-md"
-          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+          ? "bg-primary/15 text-primary"
+          : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
       )}
     >
+      {isActive && (
+        <div className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_8px_rgba(132,204,22,0.4)]" />
+      )}
       <Icon
         className={cn(
           "h-5 w-5 shrink-0 transition-colors",
           isActive
-            ? "text-primary-foreground"
-            : "text-muted-foreground group-hover:text-foreground",
+            ? "text-primary"
+            : "text-slate-500 group-hover:text-slate-300",
         )}
       />
       {item.label}
@@ -106,13 +109,13 @@ function NavContent({
         ))}
       </nav>
 
-      <div className="border-t p-3">
-        <div className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="border-t border-white/10 p-3">
+        <div className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-slate-500">
           {isAdmin ? "Admin Account" : "Parent Account"}
         </div>
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
+          className="w-full justify-start gap-3 text-slate-400 hover:bg-white/5 hover:text-red-400"
           onClick={() => {
             handleLogout();
             onNavigate?.();
@@ -135,18 +138,17 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden h-screen w-64 shrink-0 flex-col border-r bg-card lg:flex">
-        <div className="flex h-16 items-center gap-3 border-b px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 text-sm font-bold text-white shadow-lg shadow-primary/25">
+      <aside className="hidden h-screen w-64 shrink-0 flex-col bg-[#0a0f1e] lg:flex">
+        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-400 text-sm font-bold text-[#0a0f1e] shadow-lg shadow-primary/20">
             FA
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-emerald-400 opacity-40 blur-md" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground">
+            <span className="font-display text-lg tracking-wide text-white">
               Football Academy
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              Fee Register
-            </span>
+            <span className="text-[11px] text-slate-500">Fee Register</span>
           </div>
         </div>
 
@@ -154,28 +156,34 @@ export function Sidebar({ role }: SidebarProps) {
       </aside>
 
       {/* Mobile header */}
-      <div className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur-sm lg:hidden">
+      <div className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-[#0a0f1e]/95 px-4 backdrop-blur-sm lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             render={
-              <Button variant="ghost" size="icon" className="lg:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-400 hover:text-white lg:hidden"
+              >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             }
           />
-          <SheetContent side="left" className="w-72 p-0">
-            <div className="flex h-16 items-center gap-3 border-b px-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 text-sm font-bold text-white shadow-lg shadow-primary/25">
+          <SheetContent
+            side="left"
+            className="w-72 border-white/10 bg-[#0a0f1e] p-0"
+          >
+            <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-400 text-sm font-bold text-[#0a0f1e] shadow-lg shadow-primary/20">
                 FA
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary to-emerald-400 opacity-40 blur-md" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground">
+                <span className="font-display text-lg tracking-wide text-white">
                   Football Academy
                 </span>
-                <span className="text-[11px] text-muted-foreground">
-                  Fee Register
-                </span>
+                <span className="text-[11px] text-slate-500">Fee Register</span>
               </div>
             </div>
             <NavContent
@@ -188,10 +196,10 @@ export function Sidebar({ role }: SidebarProps) {
         </Sheet>
 
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-emerald-600 text-xs font-bold text-white">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-emerald-400 text-xs font-bold text-[#0a0f1e]">
             FA
           </div>
-          <span className="text-sm font-semibold text-foreground">
+          <span className="font-display text-base tracking-wide text-white">
             Football Academy
           </span>
         </div>
