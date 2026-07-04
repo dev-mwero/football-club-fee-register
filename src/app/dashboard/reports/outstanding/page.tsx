@@ -17,7 +17,9 @@ import { Notification } from "@/models/Notification";
 export const dynamic = "force-dynamic";
 
 function buildLink(type: "ALL" | "FEE" | "EXPENSE") {
-  return type === "ALL" ? "/dashboard/reports/outstanding" : `/dashboard/reports/outstanding?type=${type}`;
+  return type === "ALL"
+    ? "/dashboard/reports/outstanding"
+    : `/dashboard/reports/outstanding?type=${type}`;
 }
 
 export default async function OutstandingReportPage({
@@ -84,17 +86,26 @@ export default async function OutstandingReportPage({
         </div>
         <div className="ml-auto flex gap-2">
           <Link href={buildLink("ALL")}>
-            <Button variant={selectedType === "ALL" ? "default" : "outline"} size="sm">
+            <Button
+              variant={selectedType === "ALL" ? "default" : "outline"}
+              size="sm"
+            >
               All
             </Button>
           </Link>
           <Link href={buildLink("FEE")}>
-            <Button variant={selectedType === "FEE" ? "default" : "outline"} size="sm">
+            <Button
+              variant={selectedType === "FEE" ? "default" : "outline"}
+              size="sm"
+            >
               Fees
             </Button>
           </Link>
           <Link href={buildLink("EXPENSE")}>
-            <Button variant={selectedType === "EXPENSE" ? "default" : "outline"} size="sm">
+            <Button
+              variant={selectedType === "EXPENSE" ? "default" : "outline"}
+              size="sm"
+            >
               Expenses
             </Button>
           </Link>
@@ -122,16 +133,20 @@ export default async function OutstandingReportPage({
                   colSpan={8}
                   className="text-center text-muted-foreground"
                 >
-                  No {selectedType === "ALL" ? "outstanding records" : `${selectedType.toLowerCase()} records`} found
+                  No{" "}
+                  {selectedType === "ALL"
+                    ? "outstanding records"
+                    : `${selectedType.toLowerCase()} records`}{" "}
+                  found
                 </TableCell>
               </TableRow>
             )}
             {recordsWithReminder.map((record) => {
-              const player = record.player as {
+              const player = record.player as unknown as {
                 fullName: string;
                 teamCategory: string;
               } | null;
-              const fee = record.feeStructure as {
+              const fee = record.feeStructure as unknown as {
                 name: string;
                 amount: number;
               } | null;
@@ -140,7 +155,7 @@ export default async function OutstandingReportPage({
                 "FEE";
 
               return (
-                <TableRow key={record._id}>
+                <TableRow key={record._id?.toString() ?? Math.random()}>
                   <TableCell className="font-medium">
                     {player?.fullName ?? "—"}
                   </TableCell>

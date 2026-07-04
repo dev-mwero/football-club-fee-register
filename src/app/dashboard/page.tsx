@@ -14,7 +14,6 @@ import {
 import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { FeeRecord } from "@/models/FeeRecord";
-import { Payment } from "@/models/Payment";
 import { Player } from "@/models/Player";
 import { getDashboardStats } from "@/services/report-service";
 
@@ -237,8 +236,15 @@ async function ParentDashboard(
               <TableBody>
                 {child.records.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No {recordTypeFilter === "ALL" ? "fee records" : recordTypeFilter.toLowerCase()} found
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-muted-foreground"
+                    >
+                      No{" "}
+                      {recordTypeFilter === "ALL"
+                        ? "fee records"
+                        : recordTypeFilter.toLowerCase()}{" "}
+                      found
                     </TableCell>
                   </TableRow>
                 )}

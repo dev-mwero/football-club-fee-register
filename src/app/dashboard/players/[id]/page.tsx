@@ -30,7 +30,12 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const recordTypeFilter = resolvedSearchParams?.type === "EXPENSE" ? "EXPENSE" : resolvedSearchParams?.type === "FEE" ? "FEE" : "ALL";
+  const recordTypeFilter =
+    resolvedSearchParams?.type === "EXPENSE"
+      ? "EXPENSE"
+      : resolvedSearchParams?.type === "FEE"
+        ? "FEE"
+        : "ALL";
   const session = await getSession();
   await connectDB();
 
@@ -140,7 +145,9 @@ export default async function PlayerDetailPage({
           <div className="flex items-center justify-between gap-3">
             <CardTitle>Fee Records</CardTitle>
             <div className="flex gap-2 text-xs">
-              <Link href={`/dashboard/players/${id}${recordTypeFilter === "ALL" ? "" : "?type=ALL"}`}>
+              <Link
+                href={`/dashboard/players/${id}${recordTypeFilter === "ALL" ? "" : "?type=ALL"}`}
+              >
                 <Button
                   variant={recordTypeFilter === "ALL" ? "default" : "outline"}
                   size="sm"
@@ -158,7 +165,9 @@ export default async function PlayerDetailPage({
               </Link>
               <Link href={`/dashboard/players/${id}?type=EXPENSE`}>
                 <Button
-                  variant={recordTypeFilter === "EXPENSE" ? "default" : "outline"}
+                  variant={
+                    recordTypeFilter === "EXPENSE" ? "default" : "outline"
+                  }
                   size="sm"
                 >
                   Expenses
@@ -187,7 +196,11 @@ export default async function PlayerDetailPage({
                     colSpan={canPay ? 7 : 6}
                     className="text-center text-muted-foreground"
                   >
-                    No {recordTypeFilter === "ALL" ? "fee records" : recordTypeFilter.toLowerCase()} found
+                    No{" "}
+                    {recordTypeFilter === "ALL"
+                      ? "fee records"
+                      : recordTypeFilter.toLowerCase()}{" "}
+                    found
                   </TableCell>
                 </TableRow>
               )}
@@ -231,12 +244,12 @@ export default async function PlayerDetailPage({
                         {record.status}
                       </Badge>
                     </TableCell>
-                    {canPay && (
+                    {canPay && parent?._id && (
                       <TableCell className="text-right">
                         {record.status !== "PAID" && (
                           <PayNowButton
                             playerId={id}
-                            parentId={parent!._id}
+                            parentId={parent._id}
                             amount={record.balance}
                             label={
                               record.status === "UNPAID"

@@ -41,7 +41,9 @@ function getCurrentPeriodKey() {
 }
 
 function getUniqueTeamCategories(players: Player[]) {
-  return Array.from(new Set(players.map((player) => player.teamCategory))).sort();
+  return Array.from(
+    new Set(players.map((player) => player.teamCategory)),
+  ).sort();
 }
 
 function getPlayerLabel(player: Player) {
@@ -88,7 +90,9 @@ export default function AssignFeePage() {
     setError("");
     setLoading(true);
 
-    const selectedFee = feeStructures.find((f) => f._id === selectedManualFeeId);
+    const selectedFee = feeStructures.find(
+      (f) => f._id === selectedManualFeeId,
+    );
 
     if (!selectedPlayerId || !selectedFee) {
       setError("Select both a player and fee structure");
@@ -140,7 +144,10 @@ export default function AssignFeePage() {
       return;
     }
 
-    if (parsedCustomAmount !== null && (!Number.isFinite(parsedCustomAmount) || parsedCustomAmount <= 0)) {
+    if (
+      parsedCustomAmount !== null &&
+      (!Number.isFinite(parsedCustomAmount) || parsedCustomAmount <= 0)
+    ) {
       setError("Enter a valid custom amount greater than zero");
       setAutoLoading(false);
       return;
@@ -190,7 +197,11 @@ export default function AssignFeePage() {
         payload.billingReason = billingReason.trim();
       }
 
-      if (parsedCustomAmount !== null || billingLabel.trim() || billingReason.trim()) {
+      if (
+        parsedCustomAmount !== null ||
+        billingLabel.trim() ||
+        billingReason.trim()
+      ) {
         payload.chargeType = "EXPENSE";
       }
 
@@ -212,7 +223,7 @@ export default function AssignFeePage() {
             ? `${selectedTeamCategory} players`
             : billingScope === "SELECTED_PLAYERS"
               ? `${selectedPlayerIds.length} selected players`
-            : "active players"
+              : "active players"
         } as ${payload.chargeType ?? "FEE"}`,
       );
       router.push("/dashboard/fees");
@@ -264,7 +275,7 @@ export default function AssignFeePage() {
                   name="player"
                   required
                   value={selectedPlayerId}
-                  onValueChange={setSelectedPlayerId}
+                  onValueChange={(value) => setSelectedPlayerId(value ?? "")}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select player" />
@@ -285,7 +296,7 @@ export default function AssignFeePage() {
                   name="feeStructure"
                   required
                   value={selectedManualFeeId}
-                  onValueChange={setSelectedManualFeeId}
+                  onValueChange={(value) => setSelectedManualFeeId(value ?? "")}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select fee" />
@@ -311,7 +322,8 @@ export default function AssignFeePage() {
           <CardHeader>
             <CardTitle>Bulk Billing Trigger</CardTitle>
             <CardDescription>
-              Manually trigger billing for all active players or a filtered group
+              Manually trigger billing for all active players or a filtered
+              group
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -321,7 +333,7 @@ export default function AssignFeePage() {
                 <Select
                   required
                   value={selectedAutoFeeId}
-                  onValueChange={setSelectedAutoFeeId}
+                  onValueChange={(value) => setSelectedAutoFeeId(value ?? "")}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select fee" />
@@ -329,7 +341,8 @@ export default function AssignFeePage() {
                   <SelectContent>
                     {feeStructures.map((fee) => (
                       <SelectItem key={fee._id} value={fee._id}>
-                        {fee.name} - KES {fee.amount.toLocaleString()} ({fee.frequency.toLowerCase().replace("_", " ")})
+                        {fee.name} - KES {fee.amount.toLocaleString()} (
+                        {fee.frequency.toLowerCase().replace("_", " ")})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -338,7 +351,10 @@ export default function AssignFeePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="billingScope">Billing Scope</Label>
-                <Select value={billingScope} onValueChange={setBillingScope}>
+                <Select
+                  value={billingScope}
+                  onValueChange={(value) => setBillingScope(value ?? "")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose scope" />
                   </SelectTrigger>
@@ -361,7 +377,9 @@ export default function AssignFeePage() {
                   <Label htmlFor="teamCategory">Team Category</Label>
                   <Select
                     value={selectedTeamCategory}
-                    onValueChange={setSelectedTeamCategory}
+                    onValueChange={(value) =>
+                      setSelectedTeamCategory(value ?? "")
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select team category" />

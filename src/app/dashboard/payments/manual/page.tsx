@@ -51,7 +51,9 @@ export default function ManualPaymentPage() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
-  const [recordTypeFilter, setRecordTypeFilter] = useState<"ALL" | "FEE" | "EXPENSE">("ALL");
+  const [recordTypeFilter, setRecordTypeFilter] = useState<
+    "ALL" | "FEE" | "EXPENSE"
+  >("ALL");
 
   useEffect(() => {
     fetch("/api/admin/payments/manual/players")
@@ -68,7 +70,9 @@ export default function ManualPaymentPage() {
   const visibleFeeRecords =
     recordTypeFilter === "ALL"
       ? feeRecords
-      : feeRecords.filter((record) => (record.chargeType ?? "FEE") === recordTypeFilter);
+      : feeRecords.filter(
+          (record) => (record.chargeType ?? "FEE") === recordTypeFilter,
+        );
   const totalOutstanding = feeRecords.reduce((sum, r) => sum + r.balance, 0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -226,7 +230,11 @@ export default function ManualPaymentPage() {
               </p>
             ) : visibleFeeRecords.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No {recordTypeFilter === "ALL" ? "fee records" : recordTypeFilter.toLowerCase()} found for this player
+                No{" "}
+                {recordTypeFilter === "ALL"
+                  ? "fee records"
+                  : recordTypeFilter.toLowerCase()}{" "}
+                found for this player
               </p>
             ) : (
               <Table>
