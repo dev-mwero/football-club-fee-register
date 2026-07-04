@@ -7,12 +7,13 @@ export async function getPlayers() {
   await connectDB();
   return Player.find()
     .populate("parent", "name email phone")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 }
 
 export async function getPlayerById(id: string) {
   await connectDB();
-  return Player.findById(id).populate("parent", "name email phone");
+  return Player.findById(id).populate("parent", "name email phone").lean();
 }
 
 export async function createPlayer(data: {
@@ -52,12 +53,14 @@ export async function getPlayerPaymentHistory(playerId: string) {
   await connectDB();
   return Payment.find({ player: playerId })
     .populate("player", "fullName")
-    .sort({ paymentDate: -1 });
+    .sort({ paymentDate: -1 })
+    .lean();
 }
 
 export async function getPlayerFeeRecords(playerId: string) {
   await connectDB();
   return FeeRecord.find({ player: playerId })
     .populate("feeStructure", "name amount")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 }

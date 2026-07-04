@@ -5,12 +5,12 @@ import { Player } from "@/models/Player";
 
 export async function getFeeStructures() {
   await connectDB();
-  return FeeStructure.find().sort({ createdAt: -1 });
+  return FeeStructure.find().sort({ createdAt: -1 }).lean();
 }
 
 export async function getFeeStructureById(id: string) {
   await connectDB();
-  return FeeStructure.findById(id);
+  return FeeStructure.findById(id).lean();
 }
 
 export async function createFeeStructure(data: {
@@ -47,14 +47,16 @@ export async function getFeeRecords() {
   return FeeRecord.find()
     .populate("player", "fullName teamCategory")
     .populate("feeStructure", "name amount frequency")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 }
 
 export async function getFeeRecordsByPlayer(playerId: string) {
   await connectDB();
   return FeeRecord.find({ player: playerId })
     .populate("feeStructure", "name amount frequency")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 }
 
 export async function assignFeeToPlayer(data: {
@@ -101,21 +103,26 @@ export async function autoBillActivePlayers(data: {
     query.teamCategory = data.teamCategory;
   }
 
-  const players = await Player.find(query).select(
-    "_id fullName teamCategory status",
+  const players = await Player.find(query)
+    .select("_id fullName teamCategory status")
+    .lean();
+
+  const existingRecords = await FeeRecord.find({
+    feeStructure: data.feeStructure,
+    periodKey: data.periodKey,
+  })
+    .select("player")
+    .lean();
+
+  const existingPlayerIds = new Set(
+    existingRecords.map((r) => r.player.toString()),
   );
 
   const created = [];
-  const skipped = [];
+  const skipped: string[] = [];
 
   for (const player of players) {
-    const existing = await FeeRecord.findOne({
-      player: player._id,
-      feeStructure: data.feeStructure,
-      periodKey: data.periodKey,
-    });
-
-    if (existing) {
+    if (existingPlayerIds.has(player._id.toString())) {
       skipped.push(player._id.toString());
       continue;
     }
@@ -154,13 +161,15 @@ export async function updateFeeRecord(
   if (!record) return null;
 
   record.amountPaid = data.amountPaid;
-  record.balance = record.amountDue - data.amountPaid;
+  record.balance = Math.max(0, record.amountDue - data.amountPaid);
 
-  if (record.balance <= 0) {
+  if (record.amountPaid >= record.amountDue) {
     record.status = "PAID";
     record.balance = 0;
-  } else if (data.amountPaid > 0) {
+  } else if (record.amountPaid > 0) {
     record.status = "PARTIAL";
+  } else {
+    record.status = "UNPAID";
   }
 
   return record.save();
