@@ -141,12 +141,12 @@ export default async function PlayerDetailPage({
         <Card className="transition-all duration-200 hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-                <Trophy className="h-5 w-5 text-amber-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10">
+                <Trophy className="h-5 w-5 text-cyan-500" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Balance</p>
-                <p className="text-lg font-bold text-amber-500">
+                <p className="text-lg font-bold text-cyan-600">
                   KES {totalBalance.toLocaleString()}
                 </p>
               </div>

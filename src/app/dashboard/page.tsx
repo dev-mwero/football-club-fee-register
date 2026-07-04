@@ -115,8 +115,8 @@ async function AdminDashboard() {
       title: "Fee Balances",
       value: `KES ${statsData.outstandingFees.toLocaleString()}`,
       icon: AlertTriangle,
-      color: "text-amber-500",
-      bgColor: "bg-amber-500/10",
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-500/10",
     },
     {
       title: "Expense Balances",
@@ -261,12 +261,12 @@ async function ParentDashboard(
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Outstanding Balance
                 </p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-amber-500">
+                <p className="mt-2 text-2xl font-bold tracking-tight text-cyan-600">
                   KES {totalBalanceAll.toLocaleString()}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10">
+                <AlertTriangle className="h-5 w-5 text-cyan-500" />
               </div>
             </div>
           </CardContent>

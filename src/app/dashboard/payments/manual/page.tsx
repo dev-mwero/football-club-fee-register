@@ -163,7 +163,7 @@ export default function ManualPaymentPage() {
               <div className="space-y-2">
                 <Label htmlFor="amount">
                   Amount (KES) — Outstanding:{" "}
-                  <span className="font-medium text-amber-500">
+                  <span className="font-medium text-cyan-600">
                     {totalOutstanding.toLocaleString()}
                   </span>
                 </Label>

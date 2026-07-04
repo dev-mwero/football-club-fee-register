@@ -44,10 +44,10 @@ export default function ReportsPage() {
         </Link>
 
         <Link href="/dashboard/reports/outstanding" className="group">
-          <Card className="transition-all duration-200 hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/5">
+          <Card className="transition-all duration-200 hover:border-cyan-500/30 hover:shadow-md hover:shadow-cyan-500/5">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 transition-colors group-hover:bg-amber-500 group-hover:text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 transition-colors group-hover:bg-cyan-500 group-hover:text-white">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
@@ -56,7 +56,7 @@ export default function ReportsPage() {
                     View unpaid and partially paid fees
                   </CardDescription>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-amber-600" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-cyan-600" />
               </div>
             </CardHeader>
             <CardContent>
