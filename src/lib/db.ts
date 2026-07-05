@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { env } from "@/env";
+import "@/models";
 
 const MONGODB_URI = env.MONGODB_URI;
 
