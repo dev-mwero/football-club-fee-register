@@ -20,7 +20,6 @@ export async function POST(request: Request) {
 
     const result = await initializePayment({
       playerId: parsed.data.playerId,
-      parentId: parsed.data.playerId,
       amount: parsed.data.amount,
     });
 

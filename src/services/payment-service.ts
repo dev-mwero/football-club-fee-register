@@ -5,7 +5,10 @@ import { connectDB } from "@/lib/db";
 import { initializeTransaction, verifyTransaction } from "@/lib/paystack";
 import { FeeRecord } from "@/models/FeeRecord";
 import { Payment } from "@/models/Payment";
+import { Player } from "@/models/Player";
 import { User } from "@/models/User";
+import { sendPaymentConfirmation } from "@/services/email-service";
+import { createNotification } from "@/services/notification-service";
 
 async function allocateToFeeRecords(
   playerId: string,
@@ -58,21 +61,28 @@ export async function createPaymentReference() {
 
 export async function initializePayment(params: {
   playerId: string;
-  parentId: string;
   amount: number;
 }) {
   await connectDB();
 
-  const parent = await User.findById(params.parentId);
+  const player = await Player.findById(params.playerId).populate("parent");
+  if (!player) {
+    throw new Error("Player not found");
+  }
+  const parent = player.parent as unknown as {
+    _id: string;
+    email: string;
+    name: string;
+  };
   if (!parent) {
-    throw new Error("Parent not found");
+    throw new Error("Player has no parent assigned");
   }
 
   const reference = await createPaymentReference();
 
   const payment = await Payment.create({
     player: params.playerId,
-    parent: params.parentId,
+    parent: parent._id,
     amount: params.amount,
     paymentMethod: "PAYSTACK",
     reference,
@@ -127,6 +137,24 @@ export async function handleWebhook(
     await payment.save();
 
     await allocateToFeeRecords(payment.player.toString(), payment.amount);
+
+    const player = await Player.findById(payment.player);
+    const parent = await User.findById(payment.parent);
+    if (player && parent) {
+      await sendPaymentConfirmation({
+        to: parent.email,
+        parentName: parent.name,
+        playerName: player.fullName,
+        amount: payment.amount,
+        reference: payment.reference,
+      });
+
+      await createNotification({
+        recipient: parent._id.toString(),
+        type: "PAYMENT_CONFIRMATION",
+        message: `Payment of KES ${payment.amount.toLocaleString()} for ${player.fullName} confirmed. Reference: ${payment.reference}`,
+      });
+    }
   }
 }
 
@@ -169,6 +197,24 @@ export async function createManualPayment(params: {
   });
 
   await allocateToFeeRecords(params.playerId, params.amount);
+
+  const player = await Player.findById(params.playerId);
+  const parent = await User.findById(params.parentId);
+  if (player && parent) {
+    await sendPaymentConfirmation({
+      to: parent.email,
+      parentName: parent.name,
+      playerName: player.fullName,
+      amount: params.amount,
+      reference,
+    });
+
+    await createNotification({
+      recipient: parent._id.toString(),
+      type: "PAYMENT_CONFIRMATION",
+      message: `Payment of KES ${params.amount.toLocaleString()} for ${player.fullName} confirmed. Reference: ${reference}`,
+    });
+  }
 
   return payment;
 }
