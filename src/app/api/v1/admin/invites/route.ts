@@ -69,8 +69,9 @@ export async function POST(request: Request) {
       expiresAt,
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-    const inviteUrl = `${baseUrl}/register?token=${token}`;
+    const proto = request.headers.get("x-forwarded-proto") ?? "http";
+    const host = request.headers.get("host") ?? "localhost:3000";
+    const inviteUrl = `${proto}://${host}/register?token=${token}`;
 
     const { subject, html } = inviteEmail({ inviteUrl, role });
     await sendEmail({ to: email, subject, html });
