@@ -13,7 +13,12 @@ export const registerSchema = z.object({
     .string()
     .min(8, "Password must be at least 8 characters")
     .max(128),
-  role: z.enum(["ADMIN", "PARENT", "COACH"]).optional(),
+  inviteToken: z.string().min(1, "Invite token is required"),
+});
+
+export const createInviteSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["ADMIN", "PARENT", "COACH"]),
 });
 
 export const createPlayerSchema = z.object({

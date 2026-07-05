@@ -29,6 +29,58 @@ export async function sendEmail(params: {
   });
 }
 
+export function inviteEmail(params: { inviteUrl: string; role: string }) {
+  const roleLabel =
+    params.role === "ADMIN"
+      ? "an admin"
+      : params.role === "COACH"
+        ? "a coach"
+        : "a parent";
+  return {
+    subject: "You're Invited - Football Academy Fee Register",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+        <div style="background: #065F46; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 20px;">Football Academy</h1>
+        </div>
+        <div style="background: #F8FAFC; padding: 24px; border: 1px solid #E2E8F0;">
+          <p>Hello,</p>
+          <p>You have been invited to join the Football Academy Fee Register as <strong>${roleLabel}</strong>.</p>
+          <p>Click the link below to create your account:</p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${params.inviteUrl}" style="display: inline-block; background: #065F46; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Accept Invitation</a>
+          </div>
+          <p style="color: #64748B; font-size: 14px;">This link will expire in 7 days.</p>
+        </div>
+        <div style="background: #F1F5F9; padding: 12px; text-align: center; font-size: 12px; color: #64748B; border-radius: 0 0 8px 8px;">
+          Football Academy Fee Management System
+        </div>
+      </div>
+    `,
+  };
+}
+
+export function promotionEmail(params: { name: string }) {
+  return {
+    subject: "You've Been Promoted - Football Academy",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+        <div style="background: #065F46; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 20px;">Football Academy</h1>
+        </div>
+        <div style="background: #F8FAFC; padding: 24px; border: 1px solid #E2E8F0;">
+          <p>Dear ${params.name},</p>
+          <p>Congratulations! Your account has been promoted to <strong>Administrator</strong>.</p>
+          <p>You now have full access to manage players, fees, payments, and other academy settings.</p>
+        </div>
+        <div style="background: #F1F5F9; padding: 12px; text-align: center; font-size: 12px; color: #64748B; border-radius: 0 0 8px 8px;">
+          Football Academy Fee Management System
+        </div>
+      </div>
+    `,
+  };
+}
+
 export function paymentConfirmationEmail(params: {
   parentName: string;
   playerName: string;
