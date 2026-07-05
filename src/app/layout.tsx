@@ -19,9 +19,30 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const siteName = "Football Academy Fee Register";
+
 export const metadata: Metadata = {
-  title: "Fee Register - Football Academy",
-  description: "Football academy fee management system",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"),
+  title: {
+    default: siteName,
+    template: `%s | ${siteName}`,
+  },
+  description:
+    "Football academy fee management system — manage player fees, track payments, and send reminders.",
+  openGraph: {
+    type: "website",
+    siteName,
+    title: siteName,
+    description:
+      "Football academy fee management system — manage player fees, track payments, and send reminders.",
+  },
+  twitter: {
+    card: "summary",
+    title: siteName,
+    description:
+      "Football academy fee management system — manage player fees, track payments, and send reminders.",
+  },
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

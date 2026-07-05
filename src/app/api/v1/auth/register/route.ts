@@ -3,6 +3,7 @@ import { createToken, hashPassword, setSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { registerSchema } from "@/lib/validations";
+import { Invite } from "@/models/Invite";
 import { User } from "@/models/User";
 
 export async function POST(request: Request) {
@@ -33,9 +34,47 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, email, phone, password, role } = parsed.data;
+    const { name, email, phone, password, inviteToken } = parsed.data;
 
     await connectDB();
+
+    const invite = await Invite.findOne({ token: inviteToken });
+    if (!invite) {
+      return NextResponse.json(
+        { success: false, error: "Invalid invitation token" },
+        { status: 400 },
+      );
+    }
+
+    if (invite.status === "ACCEPTED") {
+      return NextResponse.json(
+        { success: false, error: "This invitation has already been used" },
+        { status: 400 },
+      );
+    }
+
+    if (invite.status === "REVOKED") {
+      return NextResponse.json(
+        { success: false, error: "This invitation has been revoked" },
+        { status: 400 },
+      );
+    }
+
+    if (invite.status === "EXPIRED" || invite.expiresAt < new Date()) {
+      invite.status = "EXPIRED";
+      await invite.save();
+      return NextResponse.json(
+        { success: false, error: "This invitation has expired" },
+        { status: 400 },
+      );
+    }
+
+    if (invite.email !== email) {
+      return NextResponse.json(
+        { success: false, error: "Email does not match invitation" },
+        { status: 400 },
+      );
+    }
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -52,8 +91,12 @@ export async function POST(request: Request) {
       email,
       phone,
       password: hashedPassword,
-      role: role ?? "PARENT",
+      role: invite.role,
     });
+
+    invite.status = "ACCEPTED";
+    invite.acceptedAt = new Date();
+    await invite.save();
 
     const token = await createToken({
       userId: user._id.toString(),

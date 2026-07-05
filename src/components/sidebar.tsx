@@ -9,6 +9,7 @@ import {
   Menu,
   Pen,
   Receipt,
+  Shield,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -25,6 +26,7 @@ interface SidebarProps {
 
 const adminItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/users", label: "Users", icon: Shield },
   { href: "/dashboard/players", label: "Players", icon: Users },
   { href: "/dashboard/fees", label: "Fees", icon: Receipt },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
