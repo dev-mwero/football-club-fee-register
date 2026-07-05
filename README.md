@@ -1,177 +1,270 @@
 # Football Academy Fee Register
 
-A production-ready fee management system for a youth football academy. This repository contains a Next.js (v16) application with an admin dashboard, player management, fee structures, Paystack payment integration, automated reminders, and reporting.
+A production-ready fee management system for youth football academies. Built with Next.js 16 (App Router), React 19, TypeScript, MongoDB, and Paystack.
 
-## Overview
-
-The app tracks players, fee structures, fee records, and payments. Admins can create fee items, assign them to players, view outstanding balances, and trigger reminders. Parents can pay fees via Paystack and view payment history.
-
-This README is based on the project plan at `./.prp/plan.md` — see that file for phased milestones and detailed design decisions.
+---
 
 ## Features
 
-- User authentication (JWT via `jose`, password hashing with `bcryptjs`)
-- Role-based dashboard (ADMIN / PARENT / COACH)
-- Player CRUD and payment history
-- Fee structures and per-player fee records (balance tracking)
-- Paystack integration (initialize, webhook, verify)
-- Email notifications and automated reminders (nodemailer + node-cron)
-- Reports and analytics endpoints for dashboard metrics
+- **Authentication** — JWT-based auth via `jose`, passwords hashed with `bcryptjs` (12 rounds), httpOnly session cookies
+- **Role-based access** — Admin, Parent, and Coach roles with per-route protection
+- **Player management** — Full CRUD with team categories, positions, and status tracking (ACTIVE / INACTIVE / GRADUATED)
+- **Fee structures** — Create one-time, monthly, termly, or yearly fees with custom amounts
+- **Fee records & auto-billing** — Assign fees to individual players or bill all active players with deduplication by period key
+- **Paystack payments** — Initialize transactions, verify payments, and handle HMAC-signed webhooks
+- **Manual payments** — Record offline/cash payments with FIFO allocation across unpaid fee records
+- **Email notifications** — Payment confirmations and reminders via Nodemailer (gracefully disabled if SMTP is unconfigured)
+- **Automated reminders** — Weekly cron job (Mondays 8 AM) via `node-cron`; also triggerable manually
+- **Reports & analytics** — Aggregated dashboard stats, payment reports, and outstanding fees reports
+- **Rate limiting** — In-memory per-key limiter on auth endpoints (login: 10/min, register: 5/hr)
+- **Input validation** — Zod schemas on all API inputs with consistent error responses
+- **Dark mode** — Theme support via `next-themes`
+
+---
 
 ## Tech stack
 
-- Next.js 16 (App Router)
-- React 19 + TypeScript
-- Mongoose (MongoDB)
-- Paystack (payments)
-- Nodemailer (email)
-- node-cron (scheduled reminders)
-- Tailwind CSS + shadcn UI primitives
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, React 19, TypeScript) |
+| Database | MongoDB with Mongoose 9 |
+| Auth | `jose` (JWT) + `bcryptjs` |
+| Payments | Paystack (initialize, verify, webhook) |
+| Email | Nodemailer (SMTP) |
+| Scheduling | `node-cron` |
+| Styling | Tailwind CSS v4 + shadcn/ui + `lucide-react` |
+| Validation | Zod 4 |
+| Testing | Vitest, Testing Library |
 
-Key dependencies are listed in `package.json`.
+---
 
 ## Quickstart
 
-1. Clone the repository
+```bash
+git clone <repo-url>
+cd fee-register
+npm install
+cp .env.example .env.local     # then edit with your values
+npm run seed                    # seed sample data (optional)
+npm run dev                     # start dev server at http://localhost:3000
+```
 
-   git clone <repo-url>
-   cd fee-register
+### Seed credentials
 
-2. Install dependencies
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@academy.com | admin123 |
+| Parent (4 accounts) | jane.mwangi@email.com, peter.otieno@email.com, grace.kimani@email.com, samuel.wanjala@email.com | parent123 |
 
-   npm install
+The seed script creates 4 fee structures, 4 parents, 8 players, and mixed-status fee records.
 
-3. Create environment variables
-
-   Create a file named `.env.local` in the project root and set the variables below.
-
-4. Seed sample data (optional)
-
-   npm run seed
-
-5. Run the dev server
-
-   npm run dev
-
-Open http://localhost:3000 in your browser.
+---
 
 ## Environment variables
 
-Create `.env.local` with the following (example names — adapt to your provider):
+All variables are validated at startup via a Zod schema in `src/env.ts`.
 
-- `MONGO_URI` — MongoDB connection string
-- `NEXT_PUBLIC_BASE_URL` — e.g. `http://localhost:3000`
-- `JWT_SECRET` — secret used to sign JWTs
-- `PAYSTACK_SECRET_KEY` — Paystack secret key (server side)
-- `NEXT_PUBLIC_PAYSTACK_KEY` — Paystack public key (client side)
-- `SMTP_HOST` — SMTP server host for email
-- `SMTP_PORT` — SMTP server port
-- `SMTP_USER` — SMTP username
-- `SMTP_PASS` — SMTP password
-- `NODE_ENV` — `development` or `production`
+| Variable | Required | Description |
+|---|---|---|
+| `NODE_ENV` | Yes | `development` or `production` |
+| `MONGODB_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Secret for signing JWTs (min 32 characters) |
+| `PAYSTACK_SECRET_KEY` | Yes | Paystack secret key (server-side) |
+| `PAYSTACK_PUBLIC_KEY` | Yes | Paystack public key (client-side) |
+| `SMTP_HOST` | No | SMTP server host (email skipped if unset) |
+| `SMTP_PORT` | No | SMTP server port |
+| `SMTP_USER` | No | SMTP username |
+| `SMTP_PASS` | No | SMTP password |
+| `EMAIL_FROM` | No | From address for emails |
 
-Notes:
-- Keep secret keys out of source control.
-- The `seed` script uses `.env.local` by default when run with `npm run seed`.
+---
 
-## Available npm scripts
+## Scripts
 
-- `npm run dev` — Run Next.js in development
-- `npm run build` — Build for production
-- `npm run start` — Start built app
-- `npm run seed` — Run `src/scripts/seed.ts` to populate sample data
-- `npm run lint` — Run biome checks
-- `npm run format` — Format with biome
+| Script | Description |
+|---|---|
+| `npm run dev` | Start Next.js development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run seed` | Seed database with sample data |
+| `npm run lint` | Run Biome checks |
+| `npm run format` | Format code with Biome |
+| `npm test` | Run Vitest (watch mode) |
+| `npm run test:run` | Run Vitest once |
+| `npm run test:coverage` | Run Vitest with coverage |
 
-## Project structure (high level)
+---
 
+## Project structure
+
+```
 src/
-- app/ — Next.js routes and pages (auth, dashboard, API handlers)
-- components/ — UI components and shadcn primitives
-- lib/ — shared utilities (`db.ts`, `auth.ts`, `paystack.ts`, `email.ts`, `cron.ts`)
-- models/ — Mongoose models (User, Player, Payment, FeeRecord, FeeStructure, Notification)
-- services/ — business logic (player-service, payment-service, email-service, etc.)
-- scripts/ — helper scripts (e.g., `seed.ts`)
+├── app/                          # Next.js App Router
+│   ├── (auth)/login              # Login page
+│   ├── (auth)/register           # Registration page
+│   ├── dashboard/                # Protected dashboard
+│   │   ├── fees/                 # Fee structure CRUD & assignment
+│   │   ├── players/              # Player CRUD & detail
+│   │   ├── payments/             # Payment history & manual entry
+│   │   ├── notifications/        # Notification history
+│   │   └── reports/              # Payment & outstanding reports
+│   └── api/v1/                   # REST API routes
+├── components/                   # UI components
+│   ├── sidebar.tsx               # Role-aware dashboard sidebar
+│   ├── page-layout.tsx           # Dashboard layout wrapper
+│   ├── pay-now-button.tsx        # Paystack payment button
+│   ├── send-reminders-button.tsx # Manual reminder trigger
+│   └── ui/                       # shadcn/ui primitives
+├── lib/                          # Shared utilities
+│   ├── auth.ts                   # JWT sign/verify, password hashing, session cookies
+│   ├── db.ts                     # Mongoose singleton connection
+│   ├── env.ts                    # Zod-validated environment
+│   ├── email.ts                  # Nodemailer transport & HTML templates
+│   ├── paystack.ts               # Paystack API wrapper
+│   ├── validations.ts            # Zod schemas for API inputs
+│   ├── errors.ts                 # ApiError class
+│   ├── rate-limit.ts             # In-memory rate limiter
+│   ├── cron.ts                   # Weekly reminder scheduler
+│   ├── logger.ts                 # Structured JSON logger
+│   ├── constants.ts              # Enums, currencies, page sizes
+│   └── utils.ts                  # cn() Tailwind class merger
+├── models/                       # Mongoose models
+│   ├── User.ts                   # name, email, phone, password, role
+│   ├── Player.ts                 # fullName, teamCategory, parent ref, status
+│   ├── FeeStructure.ts           # name, amount, frequency, active
+│   ├── FeeRecord.ts              # player ref, feeStructure ref, balance, status
+│   ├── Payment.ts                # amount, reference, status, paymentMethod
+│   └── Notification.ts           # recipient ref, type, message, sent
+├── services/                     # Business logic
+│   ├── fee-service.ts            # Fee structures, records, auto-billing
+│   ├── player-service.ts         # Player CRUD with cascading deletes
+│   ├── payment-service.ts        # Paystack flow, manual payments, FIFO allocation
+│   ├── report-service.ts         # Aggregated dashboard/report queries
+│   ├── notification-service.ts   # Create, send, and batch reminders
+│   └── email-service.ts          # Email sending wrappers
+├── scripts/
+│   └── seed.ts                   # Database seeder
+└── proxy.ts                      # Next.js 16 proxy (auth middleware)
+```
 
-Refer to `./.prp/plan.md` for a phase-by-phase breakdown of features and implementation notes.
+---
 
-## API endpoints (summary)
+## API reference
 
-Key API routes exist under `src/app/api/` and include (non-exhaustive):
+All API routes are under `src/app/api/v1/` unless otherwise noted.
 
-- `/api/auth/*` — register, login, me
-- `/api/players/*` — players CRUD and payments
-- `/api/fees/*` — fee structures and fee records
-- `/api/payments/*` — initialize, verify, webhook
-- `/api/reminders/send` — trigger reminders
-- `/api/reports/*` — aggregated reports for the dashboard
+### Auth
 
-Explore the `src/app/api` folder for full details and route implementations.
+| Method | Path | Description | Auth | Rate limit |
+|---|---|---|---|---|
+| POST | `/api/v1/auth/login` | Login with email/password | No | 10/min/IP |
+| POST | `/api/v1/auth/register` | Register new user | No | 5/hr/IP |
+| POST | `/api/v1/auth/logout` | Clear session cookie | Yes | — |
+| GET | `/api/v1/auth/me` | Get current user | Yes | — |
+
+### Players
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/players` | List all players |
+| POST | `/api/v1/players` | Create a player |
+| GET | `/api/v1/players/[id]` | Get player by ID |
+| PUT | `/api/v1/players/[id]` | Update player |
+| DELETE | `/api/v1/players/[id]` | Delete player (cascades fee records & payments) |
+
+### Fees
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/fees` | List fee structures |
+| POST | `/api/v1/fees` | Create fee structure |
+| GET | `/api/v1/fees/[id]` | Get fee structure |
+| PUT | `/api/v1/fees/[id]` | Update fee structure |
+| DELETE | `/api/v1/fees/[id]` | Delete fee structure |
+| GET | `/api/v1/fee-records` | List fee records |
+| POST | `/api/v1/fee-records` | Assign fee to player or auto-bill active players |
+| PUT | `/api/v1/fee-records/[id]` | Update fee record amount paid |
+
+### Payments
+
+| Method | Path | Description | Auth |
+|---|---|---|---|
+| POST | `/api/v1/payments/initialize` | Initiate Paystack transaction | Yes |
+| GET | `/api/v1/payments/verify` | Verify payment by reference | Yes |
+| POST | `/api/payments/webhook` | Paystack webhook (HMAC-verified) | Signature |
+| POST | `/api/v1/admin/payments/manual` | Record manual/offline payment | Admin |
+| GET | `/api/v1/admin/payments/manual/players` | Players with outstanding balances | Admin |
+
+### Reminders & Cron
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/v1/reminders/send` | Trigger manual payment reminders |
+| GET | `/api/v1/cron` | Cron-triggered batch reminder processing |
+
+### Reports
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/reports/dashboard` | Aggregated dashboard stats |
+| GET | `/api/v1/reports/payments` | Payment report |
+| GET | `/api/v1/reports/outstanding` | Outstanding fees report |
+
+### Other
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/health` | Database health check |
+
+---
+
+## Key design decisions
+
+- **Auth** — JWT stored in an httpOnly `session` cookie, signed with `jose` (Edge-compatible), 7-day expiry
+- **Security** — All API inputs validated with Zod; webhook HMAC-signed; rate-limited auth endpoints; `helmet`-style security headers in `next.config.ts`
+- **Fee allocation** — Payments are allocated to fee records via FIFO within a MongoDB transaction, ensuring balance accuracy
+- **Auto-billing** — `autoBillActivePlayers()` creates fee records for all active players (optionally filtered) with deduplication by `(player, feeStructure, periodKey)`
+- **Email** — Nodemailer via SMTP; if `SMTP_HOST` is not configured, all email operations gracefully skip
+- **Cascading deletes** — Deleting a player removes their fee records and payments; deleting a fee structure is safe (fee records keep the reference)
+- **Styling** — Deep green (`#065F46`) / emerald (`#10B981`) / gold (`#F59E0B`) palette with Tailwind CSS v4
+
+---
+
+## Testing
+
+```bash
+npm test                # watch mode
+npm run test:run        # single run
+npm run test:coverage   # with coverage (lines ≥70%, functions ≥70%, branches ≥60%)
+```
+
+Tests use Vitest with jsdom. Test setup includes jest-dom matchers and `next/navigation` mocks. Existing tests cover Zod validation schemas (`src/lib/validations.test.ts`) and the `cn()` utility (`src/lib/utils.test.ts`).
+
+---
 
 ## Deployment
 
-This project is compatible with platforms that support Next.js 16 (Node.js environment). Typical deploy steps:
+Compatible with any Node.js 20+ hosting platform.
 
-1. Set environment variables in your hosting provider.
-2. Build: `npm run build`
-3. Start: `npm run start` (or use platform-specific start)
+```bash
+npm run build
+npm run start
+```
 
-If deploying to Vercel, ensure any serverless cron alternative or scheduled function is set up for automated reminders.
+For Vercel deployment, configure a cron job or scheduled function as an alternative to `node-cron` (which relies on a long-running process).
+
+---
 
 ## Contributing
 
 1. Fork the repo and create a feature branch
 2. Write tests where applicable
-3. Open a PR with a clear description of changes
+3. Open a PR with a clear description
 
-See `./.prp/plan.md` for suggested commit milestones and phase ordering.
-
-## License
-
-This project does not include a license file. Add a license if you intend to open-source this repo.
+See `./.prp/plan.md` for the phased build roadmap.
 
 ---
 
-If you'd like, I can also:
+## License
 
-- Add an `ENV.example` file with the variables above
-- Add a short CONTRIBUTING.md or templates
-- Update the `seed` script to generate admin/test credentials and document them here
-
-Please tell me which of the above you'd like next.
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project does not include a license file. Add one if you intend to open-source.
