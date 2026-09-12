@@ -39,8 +39,18 @@ export function inviteEmail(params: { inviteUrl: string; role: string }) {
       : params.role === "COACH"
         ? "a coach"
         : "a parent";
+
+  const sentAt = new Date().toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
   return {
-    subject: "You're Invited - Football Academy Fee Register",
+    subject: `You're Invited - Football Academy Fee Register (${sentAt})`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
         <div style="background: #065F46; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
