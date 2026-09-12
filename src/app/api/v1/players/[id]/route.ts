@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError, badRequest, notFound, toErrorResponse } from "@/lib/errors";
 import { mongoIdParamSchema, updatePlayerSchema } from "@/lib/validations";
 import {
   deletePlayer,
@@ -13,28 +14,17 @@ export async function GET(
   try {
     const { id } = await context.params;
     const parsed = mongoIdParamSchema.safeParse({ id });
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid player ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid player ID", "INVALID_ID");
     }
 
     const player = await getPlayerById(id);
     if (!player) {
-      return NextResponse.json(
-        { success: false, error: "Player not found" },
-        { status: 404 },
-      );
+      throw notFound("Player not found", "PLAYER_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: player });
   } catch (error) {
-    console.error("Get player error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch player" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/players/[id]");
   }
 }
 
@@ -45,42 +35,28 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const idParsed = mongoIdParamSchema.safeParse({ id });
-
     if (!idParsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid player ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid player ID", "INVALID_ID");
     }
 
     const body = await req.json();
     const bodyParsed = updatePlayerSchema.safeParse(body);
-
     if (!bodyParsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: bodyParsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the player details",
+        "VALIDATION_ERROR",
+        bodyParsed.error.flatten().fieldErrors,
       );
     }
 
     const player = await updatePlayer(id, bodyParsed.data);
     if (!player) {
-      return NextResponse.json(
-        { success: false, error: "Player not found" },
-        { status: 404 },
-      );
+      throw notFound("Player not found", "PLAYER_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: player });
   } catch (error) {
-    console.error("Update player error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update player" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "PUT /api/v1/players/[id]");
   }
 }
 
@@ -91,27 +67,16 @@ export async function DELETE(
   try {
     const { id } = await context.params;
     const parsed = mongoIdParamSchema.safeParse({ id });
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid player ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid player ID", "INVALID_ID");
     }
 
     const player = await deletePlayer(id);
     if (!player) {
-      return NextResponse.json(
-        { success: false, error: "Player not found" },
-        { status: 404 },
-      );
+      throw notFound("Player not found", "PLAYER_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: player });
   } catch (error) {
-    console.error("Delete player error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to delete player" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "DELETE /api/v1/players/[id]");
   }
 }

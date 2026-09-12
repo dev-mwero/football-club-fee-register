@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createToken, setSession, verifyPassword } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import {
+  ApiError,
+  toErrorResponse,
+  tooManyRequests,
+  unauthorized,
+} from "@/lib/errors";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { loginSchema } from "@/lib/validations";
 import { User } from "@/models/User";
@@ -10,26 +16,18 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const limit = rateLimit(`login:${ip}`, { windowMs: 60_000, max: 10 });
     if (!limit.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many login attempts. Please try again later.",
-        },
-        { status: 429 },
-      );
+      throw tooManyRequests("Too many login attempts. Please try again later.");
     }
 
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please enter a valid email and password",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
@@ -38,19 +36,8 @@ export async function POST(request: Request) {
     await connectDB();
 
     const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Invalid credentials" },
-        { status: 401 },
-      );
-    }
-
-    const isValid = await verifyPassword(password, user.password);
-    if (!isValid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid credentials" },
-        { status: 401 },
-      );
+    if (!user || !(await verifyPassword(password, user.password))) {
+      throw unauthorized("Invalid email or password");
     }
 
     const token = await createToken({
@@ -71,10 +58,6 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/auth/login");
   }
 }

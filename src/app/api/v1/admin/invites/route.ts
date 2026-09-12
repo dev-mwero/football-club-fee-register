@@ -2,31 +2,50 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { inviteEmail, sendEmail } from "@/lib/email";
+import { ApiError, badRequest, conflict, toErrorResponse } from "@/lib/errors";
 import { createInviteSchema } from "@/lib/validations";
 import { Invite } from "@/models/Invite";
 import { User } from "@/models/User";
 
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 function getUserId(request: Request): string {
   const userId = request.headers.get("x-user-id");
   if (!userId) {
-    throw new Error("Missing user ID in request");
+    throw new ApiError(
+      401,
+      "You must be signed in to send invitations",
+      "UNAUTHENTICATED",
+    );
   }
   return userId;
 }
 
+function getInviteUrl(request: Request, token: string): string {
+  const proto = request.headers.get("x-forwarded-proto") ?? "http";
+  const host = request.headers.get("host") ?? "localhost:3000";
+  return `${proto}://${host}/register?token=${token}`;
+}
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = createInviteSchema.safeParse(body);
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      throw badRequest(
+        "The request body contains invalid JSON",
+        "INVALID_JSON",
+      );
+    }
 
+    const parsed = createInviteSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please provide a valid email and role",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
@@ -36,9 +55,9 @@ export async function POST(request: Request) {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json(
-        { success: false, error: "This email is already registered" },
-        { status: 409 },
+      throw conflict(
+        "This email is already registered. Use the users list to manage this person instead.",
+        "EMAIL_ALREADY_REGISTERED",
       );
     }
 
@@ -48,17 +67,14 @@ export async function POST(request: Request) {
       expiresAt: { $gt: new Date() },
     });
     if (pendingInvite) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "A pending invitation already exists for this email",
-        },
-        { status: 409 },
+      throw conflict(
+        "A pending invitation already exists for this email. Revoke the existing invitation first if you need to re-invite them.",
+        "PENDING_INVITE_EXISTS",
       );
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
     const invitedBy = getUserId(request);
 
     const invite = await Invite.create({
@@ -69,12 +85,20 @@ export async function POST(request: Request) {
       expiresAt,
     });
 
-    const proto = request.headers.get("x-forwarded-proto") ?? "http";
-    const host = request.headers.get("host") ?? "localhost:3000";
-    const inviteUrl = `${proto}://${host}/register?token=${token}`;
-
+    const inviteUrl = getInviteUrl(request, token);
     const { subject, html } = inviteEmail({ inviteUrl, role });
-    await sendEmail({ to: email, subject, html });
+
+    try {
+      await sendEmail({ to: email, subject, html });
+    } catch (error) {
+      await Invite.findByIdAndDelete(invite._id).catch(() => {});
+      throw new ApiError(
+        502,
+        "The invitation email could not be sent because the email service is unreachable. No invitation was recorded — please try again.",
+        "EMAIL_DELIVERY_FAILED",
+        error instanceof Error ? error.message : undefined,
+      );
+    }
 
     return NextResponse.json(
       {
@@ -91,11 +115,7 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Create invite error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/admin/invites");
   }
 }
 
@@ -120,10 +140,6 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error("List invites error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/admin/invites");
   }
 }

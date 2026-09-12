@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { ApiError, badRequest, notFound, toErrorResponse } from "@/lib/errors";
 import { manualPaymentSchema } from "@/lib/validations";
 import { Player } from "@/models/Player";
 import { createManualPayment } from "@/services/payment-service";
@@ -10,13 +11,11 @@ export async function POST(request: Request) {
     const parsed = manualPaymentSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the payment details",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
@@ -26,17 +25,14 @@ export async function POST(request: Request) {
 
     const player = await Player.findById(playerId).populate("parent");
     if (!player) {
-      return NextResponse.json(
-        { success: false, error: "Player not found" },
-        { status: 404 },
-      );
+      throw notFound("Player not found", "PLAYER_NOT_FOUND");
     }
 
     const parent = player.parent as unknown as { _id: string } | null;
     if (!parent) {
-      return NextResponse.json(
-        { success: false, error: "Player has no parent assigned" },
-        { status: 400 },
+      throw badRequest(
+        "This player has no parent assigned",
+        "PLAYER_HAS_NO_PARENT",
       );
     }
 
@@ -49,10 +45,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: payment }, { status: 201 });
   } catch (error) {
-    console.error("Manual payment error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/admin/payments/manual");
   }
 }

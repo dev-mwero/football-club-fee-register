@@ -1,16 +1,14 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
+import { badRequest, toErrorResponse, unauthorized } from "@/lib/errors";
 import { handleWebhook } from "@/services/payment-service";
 
 export async function POST(request: Request) {
   try {
     const signature = request.headers.get("x-paystack-signature");
     if (!signature) {
-      return NextResponse.json(
-        { success: false, error: "Missing signature" },
-        { status: 400 },
-      );
+      throw badRequest("Missing signature", "MISSING_SIGNATURE");
     }
 
     const rawBody = await request.text();
@@ -21,10 +19,7 @@ export async function POST(request: Request) {
       .digest("hex");
 
     if (hash !== signature) {
-      return NextResponse.json(
-        { success: false, error: "Invalid signature" },
-        { status: 401 },
-      );
+      throw unauthorized("Invalid signature");
     }
 
     const body = JSON.parse(rawBody);
@@ -32,10 +27,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Webhook error:", error);
-    return NextResponse.json(
-      { success: false, error: "Webhook processing failed" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/payments/webhook");
   }
 }

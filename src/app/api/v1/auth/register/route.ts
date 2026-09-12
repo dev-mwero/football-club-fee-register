@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { createToken, hashPassword, setSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import {
+  ApiError,
+  badRequest,
+  conflict,
+  toErrorResponse,
+  tooManyRequests,
+} from "@/lib/errors";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { registerSchema } from "@/lib/validations";
 import { Invite } from "@/models/Invite";
@@ -11,12 +18,8 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const limit = rateLimit(`register:${ip}`, { windowMs: 3_600_000, max: 5 });
     if (!limit.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many registration attempts. Please try again later.",
-        },
-        { status: 429 },
+      throw tooManyRequests(
+        "Too many registration attempts. Please try again later.",
       );
     }
 
@@ -24,13 +27,11 @@ export async function POST(request: Request) {
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the form and try again",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
@@ -40,47 +41,47 @@ export async function POST(request: Request) {
 
     const invite = await Invite.findOne({ token: inviteToken });
     if (!invite) {
-      return NextResponse.json(
-        { success: false, error: "Invalid invitation token" },
-        { status: 400 },
+      throw badRequest(
+        "Invalid invitation token. Please use the link from your invitation email.",
+        "INVALID_INVITE_TOKEN",
       );
     }
 
     if (invite.status === "ACCEPTED") {
-      return NextResponse.json(
-        { success: false, error: "This invitation has already been used" },
-        { status: 400 },
+      throw badRequest(
+        "This invitation has already been used. Please log in instead.",
+        "INVITE_ALREADY_ACCEPTED",
       );
     }
 
     if (invite.status === "REVOKED") {
-      return NextResponse.json(
-        { success: false, error: "This invitation has been revoked" },
-        { status: 400 },
+      throw badRequest(
+        "This invitation has been revoked. Please ask the academy to send a new one.",
+        "INVITE_REVOKED",
       );
     }
 
     if (invite.status === "EXPIRED" || invite.expiresAt < new Date()) {
       invite.status = "EXPIRED";
       await invite.save();
-      return NextResponse.json(
-        { success: false, error: "This invitation has expired" },
-        { status: 400 },
+      throw badRequest(
+        "This invitation has expired. Please ask the academy to send a new one.",
+        "INVITE_EXPIRED",
       );
     }
 
     if (invite.email !== email) {
-      return NextResponse.json(
-        { success: false, error: "Email does not match invitation" },
-        { status: 400 },
+      throw badRequest(
+        "This email does not match the invitation",
+        "EMAIL_MISMATCH",
       );
     }
 
     const existing = await User.findOne({ email });
     if (existing) {
-      return NextResponse.json(
-        { success: false, error: "Email already registered" },
-        { status: 409 },
+      throw conflict(
+        "An account with this email already exists. Please log in instead.",
+        "EMAIL_ALREADY_REGISTERED",
       );
     }
 
@@ -119,10 +120,6 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Register error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/auth/register");
   }
 }

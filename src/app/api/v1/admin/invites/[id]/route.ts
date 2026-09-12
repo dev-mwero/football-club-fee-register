@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { badRequest, notFound, toErrorResponse } from "@/lib/errors";
 import { mongoIdParamSchema } from "@/lib/validations";
 import { Invite } from "@/models/Invite";
 
@@ -11,26 +12,20 @@ export async function DELETE(
     const { id } = await params;
     const parsed = mongoIdParamSchema.safeParse({ id });
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid invite ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid invite ID", "INVALID_ID");
     }
 
     await connectDB();
 
     const invite = await Invite.findById(id);
     if (!invite) {
-      return NextResponse.json(
-        { success: false, error: "Invite not found" },
-        { status: 404 },
-      );
+      throw notFound("Invite not found", "INVITE_NOT_FOUND");
     }
 
     if (invite.status !== "PENDING") {
-      return NextResponse.json(
-        { success: false, error: "Can only revoke pending invitations" },
-        { status: 400 },
+      throw badRequest(
+        "Only pending invitations can be revoked",
+        "INVITE_NOT_PENDING",
       );
     }
 
@@ -39,10 +34,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: { id: invite._id } });
   } catch (error) {
-    console.error("Revoke invite error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "DELETE /api/v1/admin/invites/[id]");
   }
 }

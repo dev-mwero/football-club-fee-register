@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
+import { ApiError, badRequest, notFound } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { initializeTransaction, verifyTransaction } from "@/lib/paystack";
 import { FeeRecord } from "@/models/FeeRecord";
 import { Payment } from "@/models/Payment";
@@ -67,7 +69,7 @@ export async function initializePayment(params: {
 
   const player = await Player.findById(params.playerId).populate("parent");
   if (!player) {
-    throw new Error("Player not found");
+    throw notFound("Player not found", "PLAYER_NOT_FOUND");
   }
   const parent = player.parent as unknown as {
     _id: string;
@@ -75,7 +77,7 @@ export async function initializePayment(params: {
     name: string;
   };
   if (!parent) {
-    throw new Error("Player has no parent assigned");
+    throw badRequest("Player has no parent assigned", "PLAYER_HAS_NO_PARENT");
   }
 
   const reference = await createPaymentReference();
@@ -102,7 +104,11 @@ export async function initializePayment(params: {
   if (!response.status) {
     payment.status = "FAILED";
     await payment.save();
-    throw new Error(response.message ?? "Payment initialization failed");
+    throw new ApiError(
+      502,
+      response.message ?? "Payment initialization failed",
+      "PAYSTACK_INITIALIZATION_FAILED",
+    );
   }
 
   return {
@@ -124,7 +130,10 @@ export async function handleWebhook(
 
   const payment = await Payment.findOne({ reference });
   if (!payment) {
-    throw new Error(`Payment not found for reference: ${reference}`);
+    throw notFound(
+      `Payment not found for reference: ${reference}`,
+      "PAYMENT_NOT_FOUND",
+    );
   }
 
   if (payment.status === "SUCCESS") return;
@@ -147,6 +156,8 @@ export async function handleWebhook(
         playerName: player.fullName,
         amount: payment.amount,
         reference: payment.reference,
+      }).catch((error: unknown) => {
+        logger.warn("Payment confirmation email not delivered", { error });
       });
 
       await createNotification({
@@ -163,7 +174,7 @@ export async function verifyPayment(reference: string) {
 
   const payment = await Payment.findOne({ reference });
   if (!payment) {
-    throw new Error("Payment not found");
+    throw notFound("Payment not found", "PAYMENT_NOT_FOUND");
   }
 
   const verification = await verifyTransaction(reference);
@@ -207,6 +218,8 @@ export async function createManualPayment(params: {
       playerName: player.fullName,
       amount: params.amount,
       reference,
+    }).catch((error: unknown) => {
+      logger.warn("Payment confirmation email not delivered", { error });
     });
 
     await createNotification({
