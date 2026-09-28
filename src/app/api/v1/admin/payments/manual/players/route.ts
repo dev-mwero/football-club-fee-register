@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { toErrorResponse } from "@/lib/errors";
 import { FeeRecord } from "@/models/FeeRecord";
 import { Player } from "@/models/Player";
 
@@ -43,10 +44,6 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    console.error("Error fetching players:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/admin/payments/manual/players");
   }
 }

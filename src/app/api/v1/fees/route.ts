@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError, toErrorResponse } from "@/lib/errors";
 import { createFeeSchema } from "@/lib/validations";
 import { createFeeStructure, getFeeStructures } from "@/services/fee-service";
 
@@ -7,11 +8,7 @@ export async function GET() {
     const fees = await getFeeStructures();
     return NextResponse.json({ success: true, data: fees });
   } catch (error) {
-    console.error("Get fees error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch fee structures" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/fees");
   }
 }
 
@@ -21,23 +18,17 @@ export async function POST(request: Request) {
     const parsed = createFeeSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the fee structure details",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
     const fee = await createFeeStructure(parsed.data);
     return NextResponse.json({ success: true, data: fee }, { status: 201 });
   } catch (error) {
-    console.error("Create fee error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to create fee structure" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/fees");
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { badRequest, toErrorResponse } from "@/lib/errors";
 import { verifyPayment } from "@/services/payment-service";
 
 export async function GET(request: Request) {
@@ -7,21 +8,12 @@ export async function GET(request: Request) {
     const reference = searchParams.get("reference");
 
     if (!reference) {
-      return NextResponse.json(
-        { success: false, error: "Reference is required" },
-        { status: 400 },
-      );
+      throw badRequest("Payment reference is required", "MISSING_REFERENCE");
     }
 
     const payment = await verifyPayment(reference);
     return NextResponse.json({ success: true, data: payment });
   } catch (error) {
-    console.error("Verify payment error:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to verify payment";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/payments/verify");
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { toErrorResponse } from "@/lib/errors";
 import { User } from "@/models/User";
 
 export async function GET() {
@@ -20,10 +21,6 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error("List users error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/admin/users");
   }
 }

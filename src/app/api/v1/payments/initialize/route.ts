@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError, toErrorResponse } from "@/lib/errors";
 import { initializePaymentSchema } from "@/lib/validations";
 import { initializePayment } from "@/services/payment-service";
 
@@ -8,30 +9,21 @@ export async function POST(request: Request) {
     const parsed = initializePaymentSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the payment details",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
     const result = await initializePayment({
       playerId: parsed.data.playerId,
-      parentId: parsed.data.playerId,
       amount: parsed.data.amount,
     });
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error("Initialize payment error:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to initialize payment";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/payments/initialize");
   }
 }

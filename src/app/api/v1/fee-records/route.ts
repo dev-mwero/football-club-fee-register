@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError, toErrorResponse } from "@/lib/errors";
 import { assignFeeSchema, autoBillSchema } from "@/lib/validations";
 import {
   assignFeeToPlayer,
@@ -11,11 +12,7 @@ export async function GET() {
     const records = await getFeeRecords();
     return NextResponse.json({ success: true, data: records });
   } catch (error) {
-    console.error("Get fee records error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch fee records" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/fee-records");
   }
 }
 
@@ -25,15 +22,12 @@ export async function POST(request: Request) {
 
     if (body.billingType === "AUTO") {
       const parsed = autoBillSchema.safeParse(body);
-
       if (!parsed.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Validation failed",
-            details: parsed.error.flatten().fieldErrors,
-          },
-          { status: 400 },
+        throw new ApiError(
+          422,
+          "Please check the billing details",
+          "VALIDATION_ERROR",
+          parsed.error.flatten().fieldErrors,
         );
       }
 
@@ -55,15 +49,12 @@ export async function POST(request: Request) {
     }
 
     const parsed = assignFeeSchema.safeParse(body);
-
     if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the fee assignment",
+        "VALIDATION_ERROR",
+        parsed.error.flatten().fieldErrors,
       );
     }
 
@@ -75,10 +66,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: record }, { status: 201 });
   } catch (error) {
-    console.error("Assign fee error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to assign fee" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/fee-records");
   }
 }

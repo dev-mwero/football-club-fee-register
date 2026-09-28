@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError, badRequest, notFound, toErrorResponse } from "@/lib/errors";
 import { mongoIdParamSchema, updateFeeSchema } from "@/lib/validations";
 import {
   deleteFeeStructure,
@@ -13,28 +14,17 @@ export async function GET(
   try {
     const { id } = await context.params;
     const parsed = mongoIdParamSchema.safeParse({ id });
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid fee structure ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid fee structure ID", "INVALID_ID");
     }
 
     const fee = await getFeeStructureById(id);
     if (!fee) {
-      return NextResponse.json(
-        { success: false, error: "Fee structure not found" },
-        { status: 404 },
-      );
+      throw notFound("Fee structure not found", "FEE_STRUCTURE_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: fee });
   } catch (error) {
-    console.error("Get fee error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch fee structure" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/fees/[id]");
   }
 }
 
@@ -45,42 +35,28 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const idParsed = mongoIdParamSchema.safeParse({ id });
-
     if (!idParsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid fee structure ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid fee structure ID", "INVALID_ID");
     }
 
     const body = await req.json();
     const bodyParsed = updateFeeSchema.safeParse(body);
-
     if (!bodyParsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: bodyParsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the fee structure details",
+        "VALIDATION_ERROR",
+        bodyParsed.error.flatten().fieldErrors,
       );
     }
 
     const fee = await updateFeeStructure(id, bodyParsed.data);
     if (!fee) {
-      return NextResponse.json(
-        { success: false, error: "Fee structure not found" },
-        { status: 404 },
-      );
+      throw notFound("Fee structure not found", "FEE_STRUCTURE_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: fee });
   } catch (error) {
-    console.error("Update fee error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update fee structure" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "PUT /api/v1/fees/[id]");
   }
 }
 
@@ -91,27 +67,16 @@ export async function DELETE(
   try {
     const { id } = await context.params;
     const parsed = mongoIdParamSchema.safeParse({ id });
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid fee structure ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid fee structure ID", "INVALID_ID");
     }
 
     const fee = await deleteFeeStructure(id);
     if (!fee) {
-      return NextResponse.json(
-        { success: false, error: "Fee structure not found" },
-        { status: 404 },
-      );
+      throw notFound("Fee structure not found", "FEE_STRUCTURE_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: fee });
   } catch (error) {
-    console.error("Delete fee error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to delete fee structure" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "DELETE /api/v1/fees/[id]");
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ApiError, badRequest, notFound, toErrorResponse } from "@/lib/errors";
 import { mongoIdParamSchema, updateFeeRecordSchema } from "@/lib/validations";
 import { updateFeeRecord } from "@/services/fee-service";
 
@@ -9,41 +10,27 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const idParsed = mongoIdParamSchema.safeParse({ id });
-
     if (!idParsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid fee record ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid fee record ID", "INVALID_ID");
     }
 
     const body = await req.json();
     const bodyParsed = updateFeeRecordSchema.safeParse(body);
-
     if (!bodyParsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: bodyParsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
+      throw new ApiError(
+        422,
+        "Please check the payment amount",
+        "VALIDATION_ERROR",
+        bodyParsed.error.flatten().fieldErrors,
       );
     }
 
     const record = await updateFeeRecord(id, bodyParsed.data);
     if (!record) {
-      return NextResponse.json(
-        { success: false, error: "Fee record not found" },
-        { status: 404 },
-      );
+      throw notFound("Fee record not found", "FEE_RECORD_NOT_FOUND");
     }
     return NextResponse.json({ success: true, data: record });
   } catch (error) {
-    console.error("Update fee record error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update fee record" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "PUT /api/v1/fee-records/[id]");
   }
 }

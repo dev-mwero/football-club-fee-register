@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { toErrorResponse } from "@/lib/errors";
 import { processReminders } from "@/services/notification-service";
 
 export async function POST() {
@@ -9,10 +10,6 @@ export async function POST() {
       data: { sent: results.filter((r) => r.sent).length, results },
     });
   } catch (error) {
-    console.error("Send reminders error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to send reminders" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/reminders/send");
   }
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { promotionEmail, sendEmail } from "@/lib/email";
+import { badRequest, notFound, toErrorResponse } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { mongoIdParamSchema } from "@/lib/validations";
 import { User } from "@/models/User";
 
@@ -12,34 +14,27 @@ export async function POST(
     const { id } = await params;
     const parsed = mongoIdParamSchema.safeParse({ id });
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid user ID" },
-        { status: 400 },
-      );
+      throw badRequest("Invalid user ID", "INVALID_ID");
     }
 
     await connectDB();
 
     const user = await User.findById(id);
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 },
-      );
+      throw notFound("User not found", "USER_NOT_FOUND");
     }
 
     if (user.role === "ADMIN") {
-      return NextResponse.json(
-        { success: false, error: "User is already an admin" },
-        { status: 400 },
-      );
+      throw badRequest("This user is already an admin", "ALREADY_ADMIN");
     }
 
     user.role = "ADMIN";
     await user.save();
 
     const { subject, html } = promotionEmail({ name: user.name });
-    await sendEmail({ to: user.email, subject, html });
+    await sendEmail({ to: user.email, subject, html }).catch((error) => {
+      logger.warn("Promotion email not delivered", { error });
+    });
 
     return NextResponse.json({
       success: true,
@@ -51,10 +46,6 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Promote user error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "POST /api/v1/admin/users/[id]/promote");
   }
 }

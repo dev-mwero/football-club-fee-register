@@ -100,6 +100,22 @@ const inviteStatusBadge = (status: string) => {
   }
 };
 
+function formatApiError(data: {
+  error?: string;
+  code?: string;
+  details?: Record<string, string[] | undefined>;
+}): string {
+  if (data?.details) {
+    const first = Object.entries(data.details).find(
+      ([, messages]) => messages?.length,
+    );
+    if (first?.[1]?.[0]) {
+      return `${first[0]}: ${first[1][0]}`;
+    }
+  }
+  return data?.error ?? "Something went wrong. Please try again.";
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [invites, setInvites] = useState<InviteData[]>([]);
@@ -112,6 +128,8 @@ export default function UsersPage() {
   const [promoteId, setPromoteId] = useState<string | null>(null);
   const [promoteName, setPromoteName] = useState("");
   const [promoting, setPromoting] = useState(false);
+  const [promoteError, setPromoteError] = useState("");
+  const [revokeError, setRevokeError] = useState("");
 
   async function loadData() {
     try {
@@ -154,37 +172,47 @@ export default function UsersPage() {
         setInviteRole("PARENT");
         loadData();
       } else {
-        setInviteError(data.error ?? "Failed to send invite");
+        setInviteError(formatApiError(data));
       }
     } catch {
-      setInviteError("Something went wrong");
+      setInviteError("Something went wrong. Please try again.");
     } finally {
       setInviting(false);
     }
   }
 
   async function handleRevokeInvite(inviteId: string) {
+    setRevokeError("");
     try {
-      await fetch(`/api/v1/admin/invites/${inviteId}`, { method: "DELETE" });
+      const res = await fetch(`/api/v1/admin/invites/${inviteId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => null);
+      if (!data?.success) {
+        setRevokeError(formatApiError(data ?? {}));
+      }
       loadData();
     } catch {
-      console.error("Failed to revoke invite");
+      setRevokeError("Failed to revoke invite. Please try again.");
     }
   }
 
   async function handlePromote(userId: string) {
     setPromoting(true);
+    setPromoteError("");
     try {
       const res = await fetch(`/api/v1/admin/users/${userId}/promote`, {
         method: "POST",
       });
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => null);
+      if (data?.success) {
         setPromoteId(null);
         loadData();
+      } else {
+        setPromoteError(formatApiError(data ?? {}));
       }
     } catch {
-      console.error("Failed to promote user");
+      setPromoteError("Failed to promote user. Please try again.");
     } finally {
       setPromoting(false);
     }
@@ -359,6 +387,11 @@ export default function UsersPage() {
                                   manage the system.
                                 </DialogDescription>
                               </DialogHeader>
+                              {promoteError && (
+                                <p className="text-sm text-destructive">
+                                  {promoteError}
+                                </p>
+                              )}
                               <DialogFooter>
                                 <Button
                                   variant="outline"
@@ -393,6 +426,9 @@ export default function UsersPage() {
         <h2 className="font-display text-2xl tracking-wide text-foreground">
           Pending Invitations
         </h2>
+        {revokeError && (
+          <p className="text-sm text-destructive">{revokeError}</p>
+        )}
         {invites.filter((inv) => inv.status === "PENDING").length === 0 ? (
           <EmptyState
             icon={<Mail className="h-7 w-7" />}

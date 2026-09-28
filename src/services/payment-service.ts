@@ -2,10 +2,15 @@ import crypto from "node:crypto";
 import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
+import { ApiError, badRequest, notFound } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { initializeTransaction, verifyTransaction } from "@/lib/paystack";
 import { FeeRecord } from "@/models/FeeRecord";
 import { Payment } from "@/models/Payment";
+import { Player } from "@/models/Player";
 import { User } from "@/models/User";
+import { sendPaymentConfirmation } from "@/services/email-service";
+import { createNotification } from "@/services/notification-service";
 
 async function allocateToFeeRecords(
   playerId: string,
@@ -58,21 +63,28 @@ export async function createPaymentReference() {
 
 export async function initializePayment(params: {
   playerId: string;
-  parentId: string;
   amount: number;
 }) {
   await connectDB();
 
-  const parent = await User.findById(params.parentId);
+  const player = await Player.findById(params.playerId).populate("parent");
+  if (!player) {
+    throw notFound("Player not found", "PLAYER_NOT_FOUND");
+  }
+  const parent = player.parent as unknown as {
+    _id: string;
+    email: string;
+    name: string;
+  };
   if (!parent) {
-    throw new Error("Parent not found");
+    throw badRequest("Player has no parent assigned", "PLAYER_HAS_NO_PARENT");
   }
 
   const reference = await createPaymentReference();
 
   const payment = await Payment.create({
     player: params.playerId,
-    parent: params.parentId,
+    parent: parent._id,
     amount: params.amount,
     paymentMethod: "PAYSTACK",
     reference,
@@ -92,7 +104,11 @@ export async function initializePayment(params: {
   if (!response.status) {
     payment.status = "FAILED";
     await payment.save();
-    throw new Error(response.message ?? "Payment initialization failed");
+    throw new ApiError(
+      502,
+      response.message ?? "Payment initialization failed",
+      "PAYSTACK_INITIALIZATION_FAILED",
+    );
   }
 
   return {
@@ -114,7 +130,10 @@ export async function handleWebhook(
 
   const payment = await Payment.findOne({ reference });
   if (!payment) {
-    throw new Error(`Payment not found for reference: ${reference}`);
+    throw notFound(
+      `Payment not found for reference: ${reference}`,
+      "PAYMENT_NOT_FOUND",
+    );
   }
 
   if (payment.status === "SUCCESS") return;
@@ -127,6 +146,26 @@ export async function handleWebhook(
     await payment.save();
 
     await allocateToFeeRecords(payment.player.toString(), payment.amount);
+
+    const player = await Player.findById(payment.player);
+    const parent = await User.findById(payment.parent);
+    if (player && parent) {
+      await sendPaymentConfirmation({
+        to: parent.email,
+        parentName: parent.name,
+        playerName: player.fullName,
+        amount: payment.amount,
+        reference: payment.reference,
+      }).catch((error: unknown) => {
+        logger.warn("Payment confirmation email not delivered", { error });
+      });
+
+      await createNotification({
+        recipient: parent._id.toString(),
+        type: "PAYMENT_CONFIRMATION",
+        message: `Payment of KES ${payment.amount.toLocaleString()} for ${player.fullName} confirmed. Reference: ${payment.reference}`,
+      });
+    }
   }
 }
 
@@ -135,7 +174,7 @@ export async function verifyPayment(reference: string) {
 
   const payment = await Payment.findOne({ reference });
   if (!payment) {
-    throw new Error("Payment not found");
+    throw notFound("Payment not found", "PAYMENT_NOT_FOUND");
   }
 
   const verification = await verifyTransaction(reference);
@@ -169,6 +208,26 @@ export async function createManualPayment(params: {
   });
 
   await allocateToFeeRecords(params.playerId, params.amount);
+
+  const player = await Player.findById(params.playerId);
+  const parent = await User.findById(params.parentId);
+  if (player && parent) {
+    await sendPaymentConfirmation({
+      to: parent.email,
+      parentName: parent.name,
+      playerName: player.fullName,
+      amount: params.amount,
+      reference,
+    }).catch((error: unknown) => {
+      logger.warn("Payment confirmation email not delivered", { error });
+    });
+
+    await createNotification({
+      recipient: parent._id.toString(),
+      type: "PAYMENT_CONFIRMATION",
+      message: `Payment of KES ${params.amount.toLocaleString()} for ${player.fullName} confirmed. Reference: ${reference}`,
+    });
+  }
 
   return payment;
 }

@@ -1,26 +1,21 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
+import { notFound, toErrorResponse, unauthorized } from "@/lib/errors";
 import { User } from "@/models/User";
 
 export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      throw unauthorized("Not authenticated");
     }
 
     await connectDB();
 
     const user = await User.findById(session.userId);
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 },
-      );
+      throw notFound("User not found", "USER_NOT_FOUND");
     }
 
     return NextResponse.json({
@@ -34,10 +29,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Me error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/auth/me");
   }
 }

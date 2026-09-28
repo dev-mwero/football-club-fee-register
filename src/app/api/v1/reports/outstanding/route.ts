@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { toErrorResponse } from "@/lib/errors";
 import { getOutstandingReport } from "@/services/report-service";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +14,6 @@ export async function GET(request: Request) {
     const report = await getOutstandingReport(chargeType);
     return NextResponse.json({ success: true, data: report });
   } catch (error) {
-    console.error("Outstanding report error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to generate outstanding report" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "GET /api/v1/reports/outstanding");
   }
 }

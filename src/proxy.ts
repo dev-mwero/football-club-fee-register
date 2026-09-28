@@ -1,19 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getTokenFromRequest, verifyToken } from "@/lib/auth";
-
-const publicPaths = [
-  "/login",
-  "/register",
-  "/api/auth/login",
-  "/api/v1/auth/login",
-  "/api/v1/auth/invite",
-];
+import { isAdminApiPath, isPublicPath } from "@/lib/paths";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -40,7 +33,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (pathname.startsWith("/api/admin/") && payload.role !== "ADMIN") {
+  if (isAdminApiPath(pathname) && payload.role !== "ADMIN") {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
       { status: 403 },
