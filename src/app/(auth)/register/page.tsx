@@ -23,7 +23,8 @@ function RegisterForm() {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [inviteError, setInviteError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -35,15 +36,24 @@ function RegisterForm() {
       return;
     }
     fetch(`/api/v1/auth/invite?token=${encodeURIComponent(token)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && data?.success) {
           setInvite(data.data);
-        } else {
-          setError(data.error ?? "Invalid invitation");
+          return;
         }
+
+        if (res.status === 401) {
+          setInviteError(
+            "This invitation link could not be verified. Please ask the academy to send you a new one.",
+          );
+          return;
+        }
+
+        setInviteError(data?.error ?? "This invitation is not valid.");
       })
-      .catch(() => setError("Failed to verify invitation"))
+      .catch(() => setInviteError("Failed to verify invitation"))
       .finally(() => setLoading(false));
   }, [token]);
 
@@ -76,7 +86,7 @@ function RegisterForm() {
     );
   }
 
-  if (error || !invite) {
+  if (inviteError || !invite) {
     return (
       <Card className="w-full max-w-md text-center">
         <CardHeader>
@@ -84,7 +94,7 @@ function RegisterForm() {
             Invalid Invitation
           </CardTitle>
           <CardDescription>
-            {error || "This invitation is not valid."}
+            {inviteError || "This invitation is not valid."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,7 +111,7 @@ function RegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    setError("");
+    setSubmitError("");
 
     try {
       const res = await fetch("/api/v1/auth/register", {
@@ -116,15 +126,21 @@ function RegisterForm() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (data.success) {
+      if (res.ok && data?.success) {
         router.push("/dashboard");
-      } else {
-        setError(data.error ?? "Registration failed");
+        return;
       }
+
+      setSubmitError(
+        data?.error ??
+          (res.status === 401
+            ? "Your invitation could not be verified. Please ask the academy to send you a new link."
+            : "Registration failed. Please try again."),
+      );
     } catch {
-      setError("Something went wrong. Please try again.");
+      setSubmitError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -198,7 +214,9 @@ function RegisterForm() {
             />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {submitError && (
+            <p className="text-sm text-destructive">{submitError}</p>
+          )}
 
           <Button type="submit" className="w-full" disabled={submitting}>
             {submitting ? "Creating Account..." : "Create Account"}
