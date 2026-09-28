@@ -40,7 +40,6 @@ const InviteSchema = new Schema<IInvite>(
 );
 
 InviteSchema.index({ email: 1, status: 1 });
-InviteSchema.index({ token: 1 });
 InviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Invite: Model<IInvite> =
