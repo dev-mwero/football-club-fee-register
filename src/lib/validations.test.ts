@@ -36,45 +36,56 @@ describe("loginSchema", () => {
 });
 
 describe("registerSchema", () => {
+  const validRegistration = {
+    name: "John Doe",
+    email: "john@example.com",
+    phone: "+254712345678",
+    password: "password123",
+    inviteToken: "a".repeat(64),
+  };
+
   it("accepts valid registration data", () => {
-    const result = registerSchema.safeParse({
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+254712345678",
-      password: "password123",
-    });
+    const result = registerSchema.safeParse(validRegistration);
     expect(result.success).toBe(true);
+  });
+
+  it("requires an invite token", () => {
+    const { inviteToken, ...withoutToken } = validRegistration;
+    expect(inviteToken).toBeDefined();
+    expect(registerSchema.safeParse(withoutToken).success).toBe(false);
+  });
+
+  it("rejects an empty invite token", () => {
+    const result = registerSchema.safeParse({
+      ...validRegistration,
+      inviteToken: "",
+    });
+    expect(result.success).toBe(false);
   });
 
   it("rejects short name", () => {
     const result = registerSchema.safeParse({
+      ...validRegistration,
       name: "J",
-      email: "john@example.com",
-      phone: "+254712345678",
-      password: "password123",
     });
     expect(result.success).toBe(false);
   });
 
   it("rejects short password", () => {
     const result = registerSchema.safeParse({
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+254712345678",
+      ...validRegistration,
       password: "123",
     });
     expect(result.success).toBe(false);
   });
 
-  it("accepts optional role", () => {
+  it("strips a client-supplied role so it cannot be self-assigned", () => {
     const result = registerSchema.safeParse({
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+254712345678",
-      password: "password123",
+      ...validRegistration,
       role: "ADMIN",
     });
     expect(result.success).toBe(true);
+    expect(result.success && result.data).not.toHaveProperty("role");
   });
 });
 
